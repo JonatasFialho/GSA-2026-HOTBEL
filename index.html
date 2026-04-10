@@ -800,7 +800,22 @@
             return '#636e72';
         }
 
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-gt0a30YBQWuXTqfmYAFEdisQGh0xDv35voIcpUuBiqsijDGXZGtERptM8EFWpS6l7A/exec'; 
+        // ==========================================================================================
+        // 🚨🚨🚨 CONFIGURAÇÃO DO GOOGLE DRIVE E APPS SCRIPT (ALTERE AQUI) 🚨🚨🚨
+        // ==========================================================================================
+        // 1. LINK DA SUA PASTA NO DRIVE:
+        // https://drive.google.com/drive/folders/1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI?usp=sharing
+        // 
+        // -> O ID DA SUA PASTA É: 1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI
+        // IMPORTANTE: Esse ID precisa ser colocado no código '.gs' do seu Google Apps Script 
+        // para que ele saiba qual pasta do Drive ele deve ler.
+        //
+        // 2. LINK DO SCRIPT (WEB APP URL):
+        // Cole abaixo o link gerado pelo seu Google Apps Script (que terminará em /exec). 
+        // É este link que fará a ponte entre o seu HTML e a sua pasta do Google Drive.
+        // ==========================================================================================
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrCsb6M_UdluiEe-cBFRElV7U17xnGE1VelVqt4fsHjKI24atIN_UccmZto0BVdkAF/exec'; 
+        // ==========================================================================================
 
         const coresPadrao = { LIM: '#e74c3c', HIG: '#00cec9', BEL: '#fd79a8', DEFAULT: '#0f4c81' };
         const mesesOrdenados = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
