@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Comercial - Integração via Apps Script</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="https://i.ibb.co/Ndc6JHxb/Design-sem-nome-4.png" type="image/png">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #0f4c81; /* Classic Blue */
+            --bg-color: #f4f7f6;
+            --header-bg: #ffffff;
+            --card-bg: #eef5fb; 
+            --text-dark: #2d3436;
+            --text-muted: #636e72;
+            --border-color: #d9e8f5; 
+            --kpi-border-color: #6ba0d6; 
+            --content-border-color: #6ba0d6; 
+            --meta-chart-border: #6ba0d6; 
+            --icon-bg: #ffffff;
+            --header-title-color: var(--primary-color);
+            --header-subtext-color: var(--text-muted);
+        }
+
+        [data-theme="light-red-cards"] {
+            --primary-color: #c0392b;
+            --bg-color: #f4f7f6;
+            --header-bg: #ffffff;
+            --card-bg: #fff0f0;
+            --text-dark: #2d3436;
+            --text-muted: #636e72;
+            --border-color: #fadbd8; 
+            --kpi-border-color: #e74c3c; 
+            --content-border-color: #e74c3c; 
+            --meta-chart-border: #e74c3c; 
+            --icon-bg: #ffffff;
+            --header-title-color: var(--primary-color);
+            --header-subtext-color: var(--text-muted);
+        }
+
+        [data-theme="red-bg"] {
+            --primary-color: #922b21; 
+            --bg-color: #fadbd8;
+            --header-bg: #c0392b; 
+            --card-bg: #ffffff;
+            --text-dark: #2d3436;
+            --text-muted: #636e72;
+            --border-color: #f1eaeb;
+            --kpi-border-color: #f1eaeb;
+            --content-border-color: #f1eaeb;
+            --meta-chart-border: #f1eaeb;
+            --icon-bg: #f8f9fa;
+            --header-title-color: #ffffff; 
+            --header-subtext-color: rgba(255, 255, 255, 0.85); 
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #3498db;
+            --bg-color: #1a1a24;
+            --header-bg: #27293d;
+            --card-bg: #27293d;
+            --text-dark: #e0e0e0;
+            --text-muted: #a0a0b0;
+            --border-color: #2b3553;
+            --kpi-border-color: #2b3553;
+            --content-border-color: #2b3553;
+            --meta-chart-border: #2b3553;
+            --icon-bg: #1e1e2f;
+            --header-title-color: var(--primary-color);
+            --header-subtext-color: var(--text-muted);
+        }
+
+        /* -------------------------------------
+           RESPONSIVIDADE ESTRUTURAL GLOBAL
+           ------------------------------------- */
+        html, body {
+            overflow-x: hidden; 
+            width: 100%;
+        }
+
+        .text-dark { color: var(--text-dark) !important; }
+        .text-muted { color: var(--text-muted) !important; }
+        .text-primary { color: var(--primary-color) !important; }
+        
+        .btn-outline-primary {
+            color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        .btn-outline-primary:hover, .btn-check:checked + .btn-outline-primary {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+        }
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+            color: white !important;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text-dark);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header-top {
+            background: var(--header-bg);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .card-kpi {
+            background: var(--card-bg);
+            border: 1px solid var(--kpi-border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, background 0.3s, border-color 0.3s;
+            height: 100%;
+            min-height: 160px;
+        }
+
+        .card-kpi:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+        }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .kpi-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin: 0;
+            letter-spacing: -0.5px;
+            word-wrap: break-word; 
+        }
+
+        .icon-box {
+            background: var(--icon-bg);
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            flex-shrink: 0; 
+        }
+        
+        .badge-custom {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap; 
+        }
+        
+        .badge-success { background: #e3fbee; color: #2ecc71; }
+        .badge-warning { background: #fdf3d8; color: #f39c12; }
+        .badge-danger { background: #fce4e4; color: #e74c3c; }
+
+        .chart-container {
+            background: var(--card-bg);
+            border: 1px solid var(--content-border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+            position: relative;
+            height: 420px;
+            transition: background 0.3s, border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 350px;
+                padding: 15px;
+            }
+        }
+
+        .border-meta-charts {
+            border: 1px solid var(--meta-chart-border) !important;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .filter-section {
+            background: var(--card-bg);
+            border: 1px solid var(--kpi-border-color);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .form-select {
+            border-radius: 8px;
+            border: 1px solid var(--kpi-border-color);
+            background-color: var(--card-bg);
+            color: var(--text-dark);
+        }
+
+        /* FILTRO CUSTOMIZADO (MULTI-SELECT) */
+        .custom-multi-select { position: relative; width: 100%; user-select: none; }
+        .custom-multi-select .select-btn {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--kpi-border-color);
+            border-radius: 8px; cursor: pointer; color: var(--text-dark); min-height: 38px; font-size: 0.95rem; transition: border-color 0.3s;
+        }
+        .custom-multi-select .select-btn:hover { border-color: var(--primary-color); }
+        .custom-multi-select .btn-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; }
+        .custom-multi-select .dropdown-content {
+            display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--card-bg);
+            border: 1px solid var(--kpi-border-color); border-radius: 8px; margin-top: 4px; z-index: 1050;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15); flex-direction: column;
+        }
+        .custom-multi-select.active .dropdown-content { display: flex; }
+        .custom-multi-select .search-wrapper { padding: 10px; border-bottom: 1px solid var(--border-color); }
+        .custom-multi-select .search-wrapper input { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; background: transparent; color: var(--text-dark); outline: none; }
+        .custom-multi-select .search-wrapper input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+        .custom-multi-select .options-list { overflow-y: auto; max-height: 250px; padding: 5px 0; }
+        .custom-multi-select .options-list::-webkit-scrollbar { width: 6px; }
+        .custom-multi-select .options-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .custom-multi-select .option-item { padding: 8px 15px; display: flex; align-items: center; cursor: pointer; font-size: 0.9rem; color: var(--text-dark); margin: 0; }
+        .custom-multi-select .option-item:hover { background: rgba(0,0,0,0.05); }
+        [data-theme="dark"] .custom-multi-select .option-item:hover { background: rgba(255,255,255,0.08); }
+        .custom-multi-select .option-item input[type="checkbox"] { margin-right: 10px; width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-color); flex-shrink: 0; }
+
+        /* Tabela Customizada */
+        .table-custom-wrapper {
+            background: var(--card-bg); border: 1px solid var(--content-border-color);
+            border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+            transition: background 0.3s, border-color 0.3s; width: 100%; overflow: hidden;
+        }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-custom { margin-bottom: 0; white-space: nowrap; }
+        .table-custom th { background-color: var(--primary-color) !important; color: white !important; font-weight: 600; border: none; padding: 12px 16px; }
+        .table-custom td { vertical-align: middle; border-bottom: 1px solid var(--border-color); color: var(--text-dark); padding: 12px 16px; background-color: var(--card-bg); transition: background 0.3s, color 0.3s; }
+        
+        @media (min-width: 768px) {
+            .table-custom th:first-child, .table-custom td:first-child { position: sticky; left: 0; z-index: 2; border-right: 2px solid var(--border-color); }
+            .table-custom th:first-child { z-index: 3; }
+        }
+
+        .modal-body { overflow-x: auto; }
+        .modal-body .table-responsive { overflow: visible; }
+        .modal-body .table-custom th {
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 4px 6px -2px rgba(0,0,0,0.15);
+        }
+        @media (min-width: 768px) {
+            .modal-body .table-custom th:first-child { z-index: 12; }
+        }
+
+        .table-striped>tbody>tr:nth-of-type(odd)>td { background-color: rgba(0, 0, 0, 0.02); }
+        .table-hover>tbody>tr:hover>td { background-color: rgba(0, 0, 0, 0.05); }
+
+        [data-theme="dark"] .table-custom td { background-color: var(--card-bg); }
+        [data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>td { background-color: rgba(255, 255, 255, 0.03); }
+        [data-theme="dark"] .table-hover>tbody>tr:hover>td { color: var(--text-dark); background-color: rgba(255, 255, 255, 0.08); }
+        [data-theme="dark"] .table-light { background-color: #31334a !important; color: #fff !important; border-color: var(--border-color); }
+        [data-theme="dark"] .table-light td { background-color: #31334a !important; color: #fff !important; }
+        [data-theme="dark"] .alert-info { background-color: #27293d; border-color: #3498db; color: #e0e0e0; }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; display: none;
+        }
+
+        /* Nav Tabs Custom Responsivas */
+        .nav-tabs { border-bottom: 2px solid var(--border-color); }
+        .nav-tabs .nav-link { border: none; color: var(--text-muted); font-weight: 600; padding: 12px 25px; border-radius: 8px 8px 0 0; }
+        .nav-tabs .nav-link.active { color: var(--primary-color); background-color: transparent; border-bottom: 3px solid var(--primary-color); }
+        
+        @media (max-width: 576px) {
+            .nav-tabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; white-space: nowrap; padding-bottom: 5px; }
+            .nav-tabs::-webkit-scrollbar { height: 4px; }
+            .nav-tabs::-webkit-scrollbar-thumb { background-color: var(--border-color); border-radius: 4px; }
+        }
+
+        .empty-state { text-align: center; padding: 80px 20px; background: var(--card-bg); border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid var(--border-color); }
+        .empty-state h3 { color: var(--text-dark); }
+        .dashboard-content { display: none; }
+        .page-wrapper { max-width: 1440px; margin: 0 auto; width: 100%; }
+        .modal-custom-width { max-width: 1440px !important; width: 95%; margin: 10px auto; }
+        
+        @media (max-width: 576px) {
+            .upload-btn-wrapper { width: 100%; }
+            .upload-btn-wrapper .btn { width: 100%; }
+            .header-action-btns { width: 100%; }
+            .header-action-btns > button, .header-action-btns > div { flex: 1 1 auto; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+            <span class="visually-hidden">A carregar...</span>
+        </div>
+        <h4 class="mt-4 text-dark text-center px-3" id="loading-text">A processar ficheiros Excel e CSV...</h4>
+        <p class="text-muted text-center px-3" id="loading-subtext">Isto pode levar alguns segundos dependendo do volume de dados.</p>
+    </div>
+
+    <!-- Header -->
+    <header class="header-top">
+        <div class="page-wrapper px-3 px-md-4 d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3">
+            <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-2">
+                <i class="fas fa-chart-line fa-2x" style="color: var(--header-title-color); transition: color 0.3s;"></i>
+                <div>
+                    <h4 class="m-0" style="font-weight: 700; color: var(--header-title-color); transition: color 0.3s;">DASHBOARD COMERCIAL</h4>
+                    <small style="color: var(--header-subtext-color) !important; transition: color 0.3s;">Acompanhamento de Vendas e Metas Condor</small>
+                </div>
+            </div>
+            <div class="header-action-btns d-flex flex-wrap justify-content-center align-items-center gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" style="border-radius: 8px; font-weight: 600; background: var(--card-bg); color: var(--text-dark); border-color: var(--border-color);">
+                        <i class="fas fa-palette me-2"></i> Temas
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                        <li><a class="dropdown-item" href="#" onclick="setTheme('default')"><i class="fas fa-circle me-2" style="color: #0f4c81;"></i> Padrão</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setTheme('light-red-cards')"><i class="fas fa-square me-2" style="color: #fff0f0; border: 1px solid #ccc;"></i> Claro (Vermelho)</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setTheme('red-bg')"><i class="fas fa-fill-drip me-2" style="color: #fadbd8;"></i> Fundo Vermelho</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setTheme('dark')"><i class="fas fa-moon me-2" style="color: #2d3436;"></i> Escuro</a></li>
+                    </ul>
+                </div>
+                
+                <!-- BOTÃO APPS SCRIPT -->
+                <button class="btn text-white shadow-sm" onclick="syncFromGoogleDriveScript()" style="background-color: #009e5f; border-radius: 8px; font-weight: 600; border: none; transition: all 0.3s; padding: 0.5rem 1rem;">
+                    <i class="fab fa-google-drive me-2"></i> Extrair via Script
+                </button>
+
+                <!-- BOTÃO UPLOAD LOCAL -->
+                <div class="upload-btn-wrapper">
+                    <button class="btn btn-primary shadow-sm" style="border-radius: 8px; font-weight: 600; background-color: var(--primary-color); border-color: var(--primary-color); padding: 0.5rem 1rem;">
+                        <i class="fas fa-folder-open me-2"></i> Upload Local
+                    </button>
+                    <input type="file" id="csv-upload" webkitdirectory directory multiple accept=".csv, .xlsx, .xls" />
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-wrapper px-3 px-md-4 py-4">
+
+        <!-- Estado Inicial -->
+        <div id="empty-state" class="empty-state">
+            <img src="https://cdn-icons-png.flaticon.com/512/3303/3303270.png" alt="Upload" style="width: 120px; opacity: 0.6; margin-bottom: 20px; max-width: 100%;">
+            <h3 class="text-dark font-weight-bold fs-4">Nenhum dado carregado</h3>
+            <p class="text-muted text-center mx-auto" style="max-width: 500px; font-size: 0.95rem;">A integração lê Excel (XLSX) e CSV com deteção inteligente de conteúdo. Selecione a pasta com os dados para iniciar.</p>
+        </div>
+
+        <!-- Conteúdo do Dashboard -->
+        <div id="dashboard-content" class="dashboard-content">
+            
+            <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="realizado-tab" data-bs-toggle="tab" data-bs-target="#realizado" type="button" role="tab" aria-controls="realizado" aria-selected="true">
+                        <i class="fas fa-chart-pie me-2"></i> Visão Geral (Realizado)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="metas-tab" data-bs-toggle="tab" data-bs-target="#metas" type="button" role="tab" aria-controls="metas" aria-selected="false">
+                        <i class="fas fa-bullseye me-2"></i> Acompanhamento de Metas
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+                
+                <!-- ABA 1: VISÃO GERAL (REALIZADO) -->
+                <div class="tab-pane fade show active" id="realizado" role="tabpanel" aria-labelledby="realizado-tab">
+                    
+                    <div class="filter-section" style="overflow: visible !important;">
+                        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-5">
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">MÊS</label>
+                                <select class="form-select" id="filter-mes">
+                                    <option value="">Todos (Acumulado)</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">SUPERVISOR</label>
+                                <div id="filter-supervisor"></div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">VENDEDOR</label>
+                                <div id="filter-vendedor"></div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">DEPARTAMENTO</label>
+                                <div id="filter-departamento"></div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">CIDADE</label>
+                                <div id="filter-cidade"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards KPI -->
+                    <div class="row g-3 g-xl-4 mb-4 row-cols-1 row-cols-sm-2 row-cols-xl-4">
+                        <div class="col">
+                            <div class="card-kpi p-3 p-xl-4 position-relative d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-xl-3">
+                                    <div class="kpi-title" id="title-kpi-sellout">SELL OUT MÊS</div>
+                                    <div class="icon-box"><i class="fas fa-dollar-sign"></i></div>
+                                </div>
+                                <div class="kpi-value mb-2 mb-xl-3" id="kpi-sellout">R$ 0,00</div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mt-auto">
+                                    <span class="badge-custom badge-success" id="badge-sellout"><i class="fas fa-arrow-trend-up"></i> 0.0%</span>
+                                    <span class="text-muted small" id="meta-sellout">Meta: R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card-kpi p-3 p-xl-4 position-relative d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-xl-3">
+                                    <div class="kpi-title" id="title-kpi-clientes">COBERTURA MÊS</div>
+                                    <div class="icon-box"><i class="fas fa-user-group"></i></div>
+                                </div>
+                                <div class="kpi-value mb-2 mb-xl-3" id="kpi-clientes">0</div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mt-auto">
+                                    <span class="badge-custom badge-warning" id="badge-clientes"><i class="fas fa-arrow-trend-down"></i> 0.0%</span>
+                                    <span class="text-muted small" id="meta-clientes">Meta: 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card-kpi p-3 p-xl-4 position-relative d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-xl-3">
+                                    <div class="kpi-title">TICKET MÉDIO GERAL</div>
+                                    <div class="icon-box"><i class="fas fa-bullseye"></i></div>
+                                </div>
+                                <div class="kpi-value mb-2 mb-xl-3" id="kpi-ticket">R$ 0,00</div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mt-auto">
+                                    <span class="badge-custom badge-success" id="badge-ticket"><i class="fas fa-arrow-trend-up"></i> 0.0%</span>
+                                    <span class="text-muted small" id="meta-ticket">Meta Planeada: R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="card-kpi p-3 p-xl-4 position-relative d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2 mb-xl-3">
+                                    <div class="kpi-title" id="title-kpi-gap">GAP DE META (R$)</div>
+                                    <div class="icon-box"><i class="fas fa-box-open"></i></div>
+                                </div>
+                                <div class="kpi-value mb-2 mb-xl-3" id="kpi-gap">R$ 0,00</div>
+                                <div class="d-flex align-items-center flex-wrap gap-2 mt-auto">
+                                    <span class="badge-custom badge-success" id="badge-gap"><i class="fas fa-arrow-trend-up"></i> 0.0%</span>
+                                    <span class="text-muted small" id="status-gap">Superávit Gerado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 g-xl-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="chart-container">
+                                <div class="chart-title">Evolução Mensal de Sell Out</div>
+                                <div class="canvas-wrapper"><canvas id="chartEvolucao"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="chart-container">
+                                <div class="chart-title">Participação por Departamento</div>
+                                <div class="canvas-wrapper"><canvas id="chartPizzaDept"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 g-xl-4 mb-4">
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-title">Evolução de Sell Out vs Meta</div>
+                                <div class="canvas-wrapper"><canvas id="chartEvolucaoMeta"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="chart-container">
+                                <div class="chart-title d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <span>Ranking de Vendedores (Top 10)</span>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showVendedoresModal()"><i class="fas fa-list me-1"></i> Ver Detalhes</button>
+                                </div>
+                                <div class="canvas-wrapper"><canvas id="chartVendedores"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 g-xl-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="chart-container">
+                                <div class="chart-title">Positivação Mensal (Clientes)</div>
+                                <div class="canvas-wrapper"><canvas id="chartPositivacao"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="chart-container">
+                                <div class="chart-title d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <span>Mix de Produtos</span>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="showProdutosModal()"><i class="fas fa-box-open me-1"></i> Ver Detalhes</button>
+                                </div>
+                                <div class="canvas-wrapper"><canvas id="chartMix"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Analítica -->
+                    <div class="table-custom-wrapper">
+                        <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <span>Tabela Analítica - Desempenho da Equipa</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('Tabela_Analitica.csv')"><i class="fas fa-download"></i> Exportar</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom" id="analytical-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortTable(0)">Supervisor <i class="fas fa-sort ms-1"></i></th>
+                                        <th onclick="sortTable(1)">Vendedor <i class="fas fa-sort ms-1"></i></th>
+                                        <th onclick="sortTable(2)" class="text-end">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
+                                        <th onclick="sortTable(3)" class="text-end">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
+                                        <th onclick="sortTable(4)" class="text-end">Ticket Médio (R$) <i class="fas fa-sort ms-1"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABA 2: METAS -->
+                <div class="tab-pane fade" id="metas" role="tabpanel" aria-labelledby="metas-tab">
+                    <div class="alert alert-info border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x me-3 d-none d-sm-block"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1 fw-bold fs-6 fs-sm-5">Parâmetros de Meta GERAL (Ano 2026)</h5>
+                            <p class="mb-0 small sm-normal">Comparação entre Metas Oficiais e Desempenho Realizado.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center mb-4 w-100">
+                        <div class="d-flex flex-wrap justify-content-center gap-2" role="group" id="meta-buttons-container">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="row g-3 g-xl-4 mb-4">
+                        <div class="col-lg-6"><div class="chart-container border-meta-charts"><div class="chart-title" id="title-chart-meta-sellout">Acompanhamento Sell Out</div><div class="canvas-wrapper"><canvas id="chartMetaSellOut"></canvas></div></div></div>
+                        <div class="col-lg-6"><div class="chart-container border-meta-charts"><div class="chart-title" id="title-chart-meta-cob">Acompanhamento Cobertura</div><div class="canvas-wrapper"><canvas id="chartMetaCobertura"></canvas></div></div></div>
+                    </div>
+
+                    <div class="table-custom-wrapper">
+                        <div class="chart-title mb-3" id="title-table-metas">Detalhamento Mensal de Metas</div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped table-custom table-bordered align-middle">
+                                <thead style="background-color: #1e4c7c; color: white;">
+                                    <tr>
+                                        <th>Mês</th>
+                                        <th class="text-end">Meta Sell Out</th><th class="text-end">Realizado Sell Out</th><th class="text-center">% Atingimento</th>
+                                        <th class="text-end">Meta Cobertura</th><th class="text-end">Realizado Cobertura</th><th class="text-center">% Atingimento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-metas-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div class="modal fade" id="modalVendedores" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
+            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header align-items-center" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title m-0" style="color: var(--text-dark); font-weight: bold;"><i class="fas fa-trophy me-2 text-warning"></i> Ranking Completo</h5>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" onclick="exportModalToPDF(event, 'vendedores')">
+                            <i class="fas fa-file-pdf me-1"></i> Gerar PDF
+                        </button>
+                        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-0" id="pdf-vendedores-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom m-0">
+                            <thead id="modal-vendedores-head"></thead>
+                            <tbody id="modal-vendedores-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalProdutos" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
+            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header align-items-center" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title m-0" style="color: var(--text-dark); font-weight: bold;"><i class="fas fa-box-open me-2 text-primary"></i> Detalhamento de Produtos Vendidos</h5>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" onclick="exportModalToPDF(event, 'produtos')">
+                            <i class="fas fa-file-pdf me-1"></i> Gerar PDF
+                        </button>
+                        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-0" id="pdf-produtos-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom m-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Posição</th>
+                                    <th onclick="sortProdModalTable('prod')">Produto / SKU <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('dept')">Departamento <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('clientes')">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('qtd')">Qtd Vendida <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-end pe-4" onclick="sortProdModalTable('sellout')">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-produtos-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="customAlertModal" tabindex="-1" aria-labelledby="customAlertModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header border-0 bg-primary text-white" style="border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title fs-6 fw-bold" id="customAlertModalLabel"><i class="fas fa-exclamation-circle me-2"></i>Aviso do Sistema</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body text-dark py-4" id="customAlertMessage"></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        const doughnutLeaderLinePlugin = {
+            id: 'doughnutLeaderLine',
+            afterDraw: function(chart) {
+                if (chart.config.type !== 'doughnut' || chart.canvas.id !== 'chartPizzaDept') return;
+                const ctx = chart.ctx;
+                const dataset = chart.data.datasets[0];
+                const meta = chart.getDatasetMeta(0);
+                const total = dataset.data.reduce((a, b) => a + b, 0);
+
+                ctx.save();
+                meta.data.forEach((element, index) => {
+                    const value = dataset.data[index];
+                    const perc = (value / total) * 100;
+                    if (perc > 0 && perc < 10) {
+                        const midAngle = element.startAngle + (element.endAngle - element.startAngle) / 2;
+                        const outerRadius = element.outerRadius;
+                        const startX = element.x + Math.cos(midAngle) * outerRadius;
+                        const startY = element.y + Math.sin(midAngle) * outerRadius;
+                        const endX = element.x + Math.cos(midAngle) * (outerRadius + 15);
+                        const endY = element.y + Math.sin(midAngle) * (outerRadius + 15);
+
+                        ctx.beginPath();
+                        ctx.moveTo(startX, startY);
+                        ctx.lineTo(endX, endY);
+                        ctx.strokeStyle = dataset.backgroundColor[index];
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        Chart.register(ChartDataLabels, doughnutLeaderLinePlugin);
+        Chart.defaults.plugins.datalabels.display = false;
+
+        function customAlert(message) {
+            document.getElementById('customAlertMessage').innerText = message;
+            var alertModal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+            alertModal.show();
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const isDark = theme === 'dark';
+            const textColor = isDark ? '#e0e0e0' : '#2d3436';
+            const gridColor = isDark ? '#2b3553' : '#dfe6e9';
+            Chart.defaults.color = textColor;
+            Chart.defaults.borderColor = gridColor;
+            Object.values(chartInstances).forEach(chart => {
+                if (chart.options.scales) {
+                    for (const axis in chart.options.scales) {
+                        if (chart.options.scales[axis].ticks) chart.options.scales[axis].ticks.color = textColor;
+                        if (chart.options.scales[axis].grid) chart.options.scales[axis].grid.color = gridColor;
+                    }
+                }
+                if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = textColor;
+                if (chart.config.type !== 'doughnut' && chart.options.plugins && chart.options.plugins.datalabels) {
+                    chart.options.plugins.datalabels.color = textColor;
+                }
+                chart.update();
+            });
+        }
+
+        let globalData = [];
+        let filteredData = [];
+        let chartInstances = {};
+        let currentMetaCategory = 'TT'; 
+        let metaDeptsList = []; 
+        
+        const dynPalette = ['#0f4c81', '#e74c3c', '#00cec9', '#fd79a8', '#f39c12', '#8e44ad', '#2ecc71', '#d35400', '#2c3e50', '#16a085', '#c0392b', '#2980b9'];
+
+        function getDeptColor(deptName, index) {
+            if(deptName === 'LIM') return '#e74c3c';
+            if(deptName === 'HIG') return '#00cec9';
+            if(deptName === 'BEL') return '#fd79a8';
+            if(index !== undefined && index >= 0) return dynPalette[index % dynPalette.length];
+            return '#636e72';
+        }
+
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-gt0a30YBQWuXTqfmYAFEdisQGh0xDv35voIcpUuBiqsijDGXZGtERptM8EFWpS6l7A/exec'; 
+
+        const coresPadrao = { LIM: '#e74c3c', HIG: '#00cec9', BEL: '#fd79a8', DEFAULT: '#0f4c81' };
+        const mesesOrdenados = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+        const nomeMeses = { '01':'Jan', '02':'Fev', '03':'Mar', '04':'Abr', '05':'Mai', '06':'Jun', '07':'Jul', '08':'Ago', '09':'Set', '10':'Out', '11':'Nov', '12':'Dez' };
+
+        let metasDinamicas = {};
+        function initializeMetas() {
+            metasDinamicas = {};
+            mesesOrdenados.forEach(m => {
+                metasDinamicas[m] = { TT: { sellout: 0, cobertura: 0 } };
+            });
+        }
+        initializeMetas(); 
+
+        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        const formatNumber = (value) => new Intl.NumberFormat('pt-BR').format(value);
+
+        // PADRONIZAÇÃO REMOVEDORA DE ESPAÇOS PARA EVITAR BUGS DE NOME
+        function standardizeString(s) {
+            if (!s) return '';
+            return String(s).toUpperCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
+                .replace(/[^A-Z0-9]/g, ""); // Deixa apenas letras e números
+        }
+
+        // NOVO: FUZZY MATCH (BUSCA INTELIGENTE DE DEPARTAMENTOS)
+        function getMetaKey(requestedCat) {
+            if (requestedCat === 'TT') return 'TT';
+            const stdCat = standardizeString(requestedCat);
+            
+            // Procura em todos os meses disponíveis para garantir que encontra a chave, mesmo que o mês 01 esteja vazio
+            for (let m of mesesOrdenados) {
+                if (metasDinamicas[m]) {
+                    // 1. Tenta correspondência exata
+                    if (metasDinamicas[m][stdCat]) return stdCat;
+                    
+                    // 2. Tenta correspondência parcial (Fuzzy Match)
+                    const possibleKeys = Object.keys(metasDinamicas[m]).filter(k => k !== 'TT');
+                    const matchedKey = possibleKeys.find(k => k.includes(stdCat) || stdCat.includes(k));
+                    if (matchedKey) return matchedKey;
+                }
+            }
+            
+            return stdCat; // Retorno padrão
+        }
+
+        function processRowData(row) {
+            const normRow = {};
+            for (let key in row) {
+                if (key) normRow[key.toUpperCase().trim()] = row[key];
+            }
+
+            let vlFatStr = String(normRow['VLFAT'] || normRow['VALOR'] || normRow['FATURAMENTO'] || normRow['VENDA'] || '0').replace(/R\$\s?/ig, '').trim();
+            if (vlFatStr.includes(',') && vlFatStr.includes('.')) {
+                if (vlFatStr.lastIndexOf(',') > vlFatStr.lastIndexOf('.')) vlFatStr = vlFatStr.replace(/\./g, '').replace(',', '.');
+                else vlFatStr = vlFatStr.replace(/,/g, '');
+            } else if (vlFatStr.includes(',')) vlFatStr = vlFatStr.replace(',', '.');
+            let vlFat = parseFloat(vlFatStr) || 0;
+
+            let qtdStr = String(normRow['QT_UN'] || normRow['QTD'] || normRow['QUANTIDADE'] || normRow['QTDE'] || normRow['QUANT'] || '0').replace(/\./g, '').replace(',', '.');
+            let qtdNum = parseFloat(qtdStr) || 0;
+            if (qtdNum === 0 && vlFat > 0) qtdNum = 1; 
+
+            let mesAno = '00';
+            let dt = normRow['DTINI'] || normRow['DATA'] || normRow['DT_EMISSAO'] || '';
+            if (dt) {
+                dt = String(dt).trim().split(' ')[0];
+                if (dt.includes('/')) mesAno = dt.split('/')[1]?.padStart(2, '0') || '00';
+                else if (dt.includes('-')) mesAno = dt.split('-')[1]?.padStart(2, '0') || '00';
+            }
+
+            let deptRaw = String(normRow['DEPARTAMENTO'] || normRow['DEPT'] || normRow['GRUPO'] || normRow['MARCA'] || '').toUpperCase().trim();
+            if (deptRaw === '' || deptRaw === 'UNDEFINED' || deptRaw === 'NULL') deptRaw = 'OUTROS';
+
+            let codCli = normRow['CODCLI'] || normRow['CLIENTE'] || normRow['CNPJ'] || normRow['COD_CLIENTE'] || '';
+            let supervisor = normRow['SUPERVISOR'] || normRow['COORDENADOR'] || normRow['GERENTE'] || 'N/I';
+            let vendedor = normRow['VENDEDOR'] || normRow['RCA'] || normRow['REP'] || 'N/I';
+            let cidade = normRow['CIDADE'] || normRow['MUNICIPIO'] || normRow['PRACA'] || 'N/I';
+            let prod = normRow['DESCRICAO'] || normRow['PRODUTO'] || normRow['NOME_PRODUTO'] || normRow['CODPROD'] || normRow['SKU'] || 'Produto Não Identificado';
+
+            return { 
+                VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
+                DEPT_NORM: deptRaw, CODCLI: codCli, SUPERVISOR: supervisor,
+                VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod
+            };
+        }
+
+        // ==========================================
+        // PROTEÇÃO TOTAL CONTRA MISTURA DE ARQUIVOS
+        // ==========================================
+        async function syncFromGoogleDriveScript() {
+            if (!GOOGLE_APPS_SCRIPT_URL) {
+                customAlert("O link do Apps Script não foi configurado."); return;
+            }
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "A conectar ao Google Drive...";
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                const data = await response.json();
+
+                if (!data || data.length === 0) {
+                    customAlert("A pasta do Drive está vazia ou o script não encontrou ficheiros.");
+                    document.getElementById('loading-overlay').style.display = 'none'; return;
+                }
+
+                globalData = [];
+                initializeMetas(); 
+                let filesProcessed = 0;
+
+                data.forEach(fileData => {
+                    let upperName = fileData.name.toUpperCase();
+                    
+                    // Bloqueio rigoroso: se tiver META, FINANC, POSITIV no nome, JAMAIS será Vendas
+                    let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
+                    let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
+                    
+                    if (upperName.includes('FINANC')) type = 'financeiro';
+                    else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
+
+                    Papa.parse(fileData.content, {
+                        header: type === 'vendas',
+                        skipEmptyLines: true,
+                        dynamicTyping: false,
+                        complete: function(results) {
+                            if (type !== 'vendas') processMetaFile(results.data, type);
+                            else globalData = globalData.concat(results.data.map(processRowData));
+                            
+                            filesProcessed++;
+                            if (filesProcessed === data.length) finalizeDataLoading();
+                        },
+                        error: function(err) {
+                            filesProcessed++;
+                            if (filesProcessed === data.length) finalizeDataLoading();
+                        }
+                    });
+                });
+
+            } catch (error) {
+                customAlert("Falha ao comunicar com o Google Apps Script.\nErro: " + error.message);
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        document.getElementById('csv-upload').addEventListener('change', async function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            
+            const allowedFiles = Array.from(files).filter(file => {
+                const lowerName = file.name.toLowerCase();
+                return lowerName.endsWith('.csv') || lowerName.endsWith('.xlsx') || lowerName.endsWith('.xls');
+            });
+            
+            if (allowedFiles.length === 0) { customAlert('Nenhum CSV ou Excel encontrado na pasta.'); return; }
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = `A processar ${allowedFiles.length} ficheiro(s) (CSV/Excel)...`;
+            
+            globalData = [];
+            initializeMetas();
+            let filesProcessed = 0;
+
+            for (let i = 0; i < allowedFiles.length; i++) {
+                const file = allowedFiles[i];
+                let upperName = file.name.toUpperCase();
+                
+                // Bloqueio rigoroso (Se o nome do arquivo for "META ANUAL", NUNCA será carregado como venda!)
+                let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
+
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
+                    if (upperName.includes('FINANC')) type = 'financeiro';
+                    else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
+
+                    Papa.parse(file, {
+                        header: type === 'vendas', 
+                        skipEmptyLines: true, 
+                        dynamicTyping: false,
+                        complete: function(results) {
+                            if (type !== 'vendas') processMetaFile(results.data, type);
+                            else globalData = globalData.concat(results.data.map(processRowData));
+                            filesProcessed++;
+                            if (filesProcessed === allowedFiles.length) finalizeDataLoading();
+                        },
+                        error: function() {
+                            filesProcessed++;
+                            if (filesProcessed === allowedFiles.length) finalizeDataLoading();
+                        }
+                    });
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        try {
+                            const data = new Uint8Array(evt.target.result);
+                            const workbook = XLSX.read(data, {type: 'array'});
+                            
+                            workbook.SheetNames.forEach(sheetName => {
+                                const worksheet = workbook.Sheets[sheetName];
+                                const upperSheetName = sheetName.toUpperCase();
+                                
+                                let currentType = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
+                                
+                                if (upperSheetName.includes('FINANC')) currentType = 'financeiro';
+                                else if (upperSheetName.includes('POSITIVA') || upperSheetName.includes('COBERTURA')) currentType = 'positivacao';
+
+                                if (currentType !== 'vendas') {
+                                    const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+                                    processMetaFile(jsonMatrix, currentType);
+                                } else {
+                                    const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                }
+                            });
+                        } catch(ex) {
+                            console.error("Erro a ler Excel:", ex);
+                        }
+                        filesProcessed++;
+                        if (filesProcessed === allowedFiles.length) finalizeDataLoading();
+                    };
+                    reader.onerror = function() {
+                        filesProcessed++;
+                        if (filesProcessed === allowedFiles.length) finalizeDataLoading();
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            }
+        });
+
+        // ==========================================
+        // PROCESSADOR DE METAS (AGORA 100% BLINDADO CONTRA A COLUNA 'CODEPTO')
+        // ==========================================
+        function processMetaFile(rows, type) {
+            if (!Array.isArray(rows) || rows.length === 0) return;
+            let rawData = rows;
+            if (!Array.isArray(rawData[0])) {
+                const keys = Object.keys(rawData[0]);
+                rawData = [keys].concat(rawData.map(row => Object.values(row)));
+            }
+
+            // Identificação de conteúdo super inteligente para planilhas Meta sem nome na aba
+            let detectedType = type;
+            if (detectedType === 'meta_desconhecida') {
+                for (let i = 0; i < Math.min(rawData.length, 150); i++) {
+                    if (Array.isArray(rawData[i])) {
+                        let rowStr = rawData[i].map(c => String(c)).join(" ").toUpperCase();
+                        if (rowStr.includes('FINANCEIRO') || rowStr.includes('R$') || rowStr.includes('VALOR')) {
+                            detectedType = 'financeiro';
+                        }
+                        if (rowStr.includes('POSITIVA') || rowStr.includes('COBERTURA') || rowStr.includes('CLIENTE')) {
+                            detectedType = 'positivacao';
+                        }
+                    }
+                }
+                if (detectedType === 'meta_desconhecida') detectedType = 'financeiro'; 
+            }
+
+            let headerRowIndex = -1;
+            
+            // Aqui isolamos rigorosamente para encontrar a palavra exata 'DEPARTAMENTO'
+            // Ocultamos qualquer falso positivo com a coluna 'CODEPTO'
+            for (let i = 0; i < Math.min(rawData.length, 150); i++) {
+                if (Array.isArray(rawData[i])) {
+                    const hasDept = rawData[i].some(cell => {
+                        if (typeof cell !== 'string') return false;
+                        let c = cell.toUpperCase().trim();
+                        // Procura a exata palavra Departamento para definir a linha!
+                        return c === 'DEPARTAMENTO' || c === 'DEPT' || c.includes('DEPARTAMENTO');
+                    });
+                    if (hasDept) {
+                        headerRowIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (headerRowIndex === -1) return; 
+
+            const headers = rawData[headerRowIndex].map(h => typeof h === 'string' ? h.toUpperCase().trim() : String(h).toUpperCase().trim());
+            
+            // Aqui garantimos que ele puxa a coluna CERTA (A coluna que diz 'DEPARTAMENTO')
+            // Ignorando completamente a coluna 'CODEPTO' que antes causava o bug.
+            const deptIdx = headers.findIndex(h => h === 'DEPARTAMENTO' || h.includes('DEPARTAMENTO'));
+            
+            if (deptIdx === -1) return; // Segurança extra
+
+            // Vinculação de colunas rigorosa (starts with para evitar acentos incorretos)
+            const monthCols = {
+                '01': headers.findIndex(h => h === 'JANEIRO' || h === 'JAN' || h.startsWith('JAN')),
+                '02': headers.findIndex(h => h === 'FEVEREIRO' || h === 'FEV' || h.startsWith('FEV')),
+                '03': headers.findIndex(h => h === 'MARÇO' || h === 'MARCO' || h === 'MAR' || h.startsWith('MAR')),
+                '04': headers.findIndex(h => h === 'ABRIL' || h === 'ABR' || h.startsWith('ABR')),
+                '05': headers.findIndex(h => h === 'MAIO' || h === 'MAI' || h.startsWith('MAI')),
+                '06': headers.findIndex(h => h === 'JUNHO' || h === 'JUN' || h.startsWith('JUN')),
+                '07': headers.findIndex(h => h === 'JULHO' || h === 'JUL' || h.startsWith('JUL')),
+                '08': headers.findIndex(h => h === 'AGOSTO' || h === 'AGO' || h.startsWith('AGO')),
+                '09': headers.findIndex(h => h === 'SETEMBRO' || h === 'SET' || h.startsWith('SET')),
+                '10': headers.findIndex(h => h === 'OUTUBRO' || h === 'OUT' || h.startsWith('OUT')),
+                '11': headers.findIndex(h => h === 'NOVEMBRO' || h === 'NOV' || h.startsWith('NOV')),
+                '12': headers.findIndex(h => h === 'DEZEMBRO' || h === 'DEZ' || h.startsWith('DEZ'))
+            };
+
+            for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (!Array.isArray(row) || row.length <= deptIdx) continue;
+                
+                let dept = row[deptIdx];
+                if (dept === undefined || dept === null) continue; // Ignora celulas completamente nulas
+                
+                let rawDept = String(dept).toUpperCase().trim();
+                
+                if (rawDept.includes('LEITURA') || rawDept.includes('CATEGORIA') || rawDept === '') continue;
+
+                let internalKey;
+                // Exclusividade para carregar perfeitamente a linha TOTAL do Excel sem falsas somas
+                if (rawDept === 'TOTAL' || rawDept === 'TOTAL GERAL' || rawDept.startsWith('TOTAL GERAL')) {
+                    internalKey = 'TT';
+                } else {
+                    internalKey = standardizeString(rawDept);
+                }
+
+                for (let m in monthCols) {
+                    const colIdx = monthCols[m];
+                    if (colIdx !== -1 && colIdx < row.length) {
+                        let valStr = String(row[colIdx]).trim();
+                        if(valStr === '' || valStr === '-' || valStr === 'undefined') continue;
+                        
+                        valStr = valStr.replace(/R\$\s?/ig, '').trim();
+                        if (valStr.includes(',') && valStr.includes('.')) {
+                            if (valStr.lastIndexOf(',') > valStr.lastIndexOf('.')) valStr = valStr.replace(/\./g, '').replace(',', '.');
+                            else valStr = valStr.replace(/,/g, '');
+                        } else if (valStr.includes(',')) {
+                            valStr = valStr.replace(',', '.');
+                        }
+                        
+                        let val = parseFloat(valStr) || 0;
+
+                        if (!metasDinamicas[m]) metasDinamicas[m] = {};
+                        if (!metasDinamicas[m][internalKey]) metasDinamicas[m][internalKey] = { sellout: 0, cobertura: 0 };
+                        
+                        if (detectedType === 'financeiro') metasDinamicas[m][internalKey].sellout += val;
+                        if (detectedType === 'positivacao') metasDinamicas[m][internalKey].cobertura += val;
+                    }
+                }
+            }
+        }
+
+        function finalizeDataLoading() {
+            if (globalData.length === 0) {
+                customAlert("Não foi possível processar vendas. Certifique-se de enviar os ficheiros de venda junto com as metas.");
+                document.getElementById('loading-overlay').style.display = 'none';
+                return;
+            }
+
+            // O nosso sistema tenta puxar a linha oficial 'TOTAL GERAL'.
+            // MAS, se ela estiver a ZERO no seu ficheiro (exemplo no Financeiro a partir de fev), 
+            // ele recalcula dinamicamente a soma dos departamentos desse mês para evitar que a meta caia para 0.
+            for (let m in metasDinamicas) {
+                if (!metasDinamicas[m]['TT']) {
+                    metasDinamicas[m]['TT'] = { sellout: 0, cobertura: 0 };
+                }
+                
+                let sumSellout = 0; let sumCobertura = 0;
+                for (let dept in metasDinamicas[m]) {
+                    if (dept !== 'TT') {
+                        sumSellout += metasDinamicas[m][dept].sellout || 0;
+                        sumCobertura += metasDinamicas[m][dept].cobertura || 0;
+                    }
+                }
+
+                // Super proteção caso o totalizador oficial venha a R$0,00 no Excel
+                if (metasDinamicas[m]['TT'].sellout === 0 && sumSellout > 0) metasDinamicas[m]['TT'].sellout = sumSellout;
+                if (metasDinamicas[m]['TT'].cobertura === 0 && sumCobertura > 0) metasDinamicas[m]['TT'].cobertura = sumCobertura;
+            }
+
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+            populateFilters();
+            populateMetaButtons();
+            filteredData = [...globalData];
+            updateDashboard();
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+        
+        function populateMetaButtons() {
+            const container = document.getElementById('meta-buttons-container');
+            metaDeptsList = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            
+            let html = `
+                <input type="radio" class="btn-check" name="btnmeta" id="btnmeta-tt" checked onchange="changeMetaCategoryIndex(-1)">
+                <label class="btn btn-outline-primary px-3 py-2 fw-bold rounded-3 flex-grow-1 flex-sm-grow-0" for="btnmeta-tt">TOTAL GERAL</label>
+            `;
+            
+            metaDeptsList.forEach((d, i) => {
+                html += `
+                    <input type="radio" class="btn-check" name="btnmeta" id="btnmeta-${i}" onchange="changeMetaCategoryIndex(${i})">
+                    <label class="btn btn-outline-primary px-3 py-2 fw-bold rounded-3 flex-grow-1 flex-sm-grow-0" for="btnmeta-${i}">${d}</label>
+                `;
+            });
+            
+            container.innerHTML = html;
+            currentMetaCategory = 'TT';
+        }
+
+        function changeMetaCategoryIndex(idx) {
+            if(idx === -1) changeMetaCategory('TT');
+            else changeMetaCategory(metaDeptsList[idx]);
+        }
+
+        function createCustomSelect(containerId, optionsArray) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = ''; container.classList.add('custom-multi-select');
+            let html = `<div class="select-btn"><span class="btn-text">Todos</span><i class="fas fa-chevron-down text-muted"></i></div><div class="dropdown-content"><div class="search-wrapper"><input type="text" placeholder="Pesquisar..."></div><div class="options-list"><label class="option-item"><input type="checkbox" value="" class="cb-todos" checked><span>Todos</span></label>${optionsArray.map(opt => `<label class="option-item item-row"><input type="checkbox" value="${opt}" class="cb-item"><span>${opt}</span></label>`).join('')}</div></div>`;
+            container.innerHTML = html;
+            const btn = container.querySelector('.select-btn'), dropdown = container.querySelector('.dropdown-content'), searchInput = container.querySelector('.search-wrapper input'), cbTodos = container.querySelector('.cb-todos'), cbItems = container.querySelectorAll('.cb-item'), itemRows = container.querySelectorAll('.item-row'), btnText = container.querySelector('.btn-text');
+            btn.addEventListener('click', (e) => { e.stopPropagation(); document.querySelectorAll('.custom-multi-select.active').forEach(el => { if (el !== container) el.classList.remove('active'); }); container.classList.toggle('active'); if (container.classList.contains('active')) { searchInput.value = ''; itemRows.forEach(row => row.style.display = 'flex'); setTimeout(() => searchInput.focus(), 100); } });
+            dropdown.addEventListener('click', e => e.stopPropagation());
+            searchInput.addEventListener('input', (e) => { const term = e.target.value.toLowerCase(); itemRows.forEach(row => { const text = row.querySelector('span').textContent.toLowerCase(); row.style.display = text.includes(term) ? 'flex' : 'none'; }); });
+            cbTodos.addEventListener('change', () => { if (cbTodos.checked) { cbItems.forEach(cb => cb.checked = false); btnText.textContent = 'Todos'; } else { let temAlgoMarcado = Array.from(cbItems).some(cb => cb.checked); if (!temAlgoMarcado) cbTodos.checked = true; } applyFilters(); });
+            cbItems.forEach(cb => { cb.addEventListener('change', () => { const checkedItems = Array.from(cbItems).filter(i => i.checked); if (checkedItems.length > 0) cbTodos.checked = false; else cbTodos.checked = true; if (cbTodos.checked) btnText.textContent = 'Todos'; else if (checkedItems.length === 1) btnText.textContent = checkedItems[0].nextElementSibling.textContent; else btnText.textContent = `${checkedItems.length} selecionados`; applyFilters(); }); });
+        }
+
+        document.addEventListener('click', () => { document.querySelectorAll('.custom-multi-select.active').forEach(el => el.classList.remove('active')); });
+
+        function getCustomSelectValues(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+            const cbTodos = container.querySelector('.cb-todos');
+            if (!cbTodos || cbTodos.checked) return [];
+            const checkedItems = container.querySelectorAll('.cb-item:checked');
+            return Array.from(checkedItems).map(cb => cb.value);
+        }
+
+        function populateFilters() {
+            const meses = [...new Set(globalData.map(d => d.MES_EXTRATO).filter(m => m !== '00'))].sort();
+            const supervisores = [...new Set(globalData.map(d => d.SUPERVISOR).filter(Boolean))].sort();
+            const vendedores = [...new Set(globalData.map(d => d.VENDEDOR).filter(Boolean))].sort();
+            const departamentos = [...new Set(globalData.map(d => d.DEPT_NORM).filter(d => d !== 'OUTROS'))].sort();
+            const cidades = [...new Set(globalData.map(d => d.CIDADE).filter(Boolean))].sort();
+
+            const selectMes = document.getElementById('filter-mes');
+            selectMes.innerHTML = '<option value="">Todos (Acumulado)</option>';
+            meses.forEach(m => { const option = document.createElement('option'); option.value = m; option.textContent = nomeMeses[m] + ' / 2026'; selectMes.appendChild(option); });
+
+            createCustomSelect('filter-supervisor', supervisores);
+            createCustomSelect('filter-vendedor', vendedores);
+            createCustomSelect('filter-departamento', departamentos);
+            createCustomSelect('filter-cidade', cidades);
+
+            selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
+        }
+
+        function applyFilters() {
+            const mes = document.getElementById('filter-mes').value;
+            const sups = getCustomSelectValues('filter-supervisor'), vends = getCustomSelectValues('filter-vendedor'), depts = getCustomSelectValues('filter-departamento'), cids = getCustomSelectValues('filter-cidade');
+            filteredData = globalData.filter(row => {
+                return (!mes || row.MES_EXTRATO === mes) && (sups.length === 0 || sups.includes(row.SUPERVISOR)) && (vends.length === 0 || vends.includes(row.VENDEDOR)) && (depts.length === 0 || depts.includes(row.DEPT_NORM)) && (cids.length === 0 || cids.includes(row.CIDADE));
+            });
+            updateDashboard();
+        }
+
+        function updateDashboard() { calculateKPIs(); renderCharts(); renderTable(); renderMetas(); }
+
+        function calculateKPIs() {
+            let totalSellOut = 0; const clientesSet = new Set(), mesesFiltradosSet = new Set(), clientesPorMes = {};
+            filteredData.forEach(row => {
+                totalSellOut += row.VLFAT_NUM;
+                if (row.CODCLI) {
+                    clientesSet.add(row.CODCLI);
+                    if (row.MES_EXTRATO && row.MES_EXTRATO !== '00') {
+                        if (!clientesPorMes[row.MES_EXTRATO]) clientesPorMes[row.MES_EXTRATO] = new Set();
+                        clientesPorMes[row.MES_EXTRATO].add(row.CODCLI);
+                    }
+                }
+                if (row.MES_EXTRATO && row.MES_EXTRATO !== '00') mesesFiltradosSet.add(row.MES_EXTRATO);
+            });
+
+            const isAccumulated = (document.getElementById('filter-mes').value === "");
+            let qtdClientesVisor = 0;
+            if (isAccumulated) {
+                let sumClientes = 0, countMeses = Object.keys(clientesPorMes).length;
+                for (let m in clientesPorMes) sumClientes += clientesPorMes[m].size;
+                qtdClientesVisor = countMeses > 0 ? Math.round(sumClientes / countMeses) : 0;
+                document.getElementById('title-kpi-clientes').innerText = 'COBERTURA MÉDIA';
+                document.getElementById('title-kpi-sellout').innerText = 'SELL OUT ACUMULADO';
+                document.getElementById('title-kpi-gap').innerText = 'GAP ACUMULADO (R$)';
+            } else {
+                qtdClientesVisor = clientesSet.size;
+                document.getElementById('title-kpi-clientes').innerText = 'COBERTURA MÊS';
+                document.getElementById('title-kpi-sellout').innerText = 'SELL OUT MÊS';
+                document.getElementById('title-kpi-gap').innerText = 'GAP MÊS (R$)';
+            }
+
+            const ticketMedio = clientesSet.size > 0 ? totalSellOut / clientesSet.size : 0;
+            let metaCatToUse = 'TT';
+            const deptFilterArray = getCustomSelectValues('filter-departamento');
+            if (deptFilterArray.length === 1) { metaCatToUse = deptFilterArray[0]; }
+
+            let queryKeyKpi = getMetaKey(metaCatToUse);
+
+            let metaSellOut = 0, metaCoberturaTotal = 0;
+            mesesFiltradosSet.forEach(m => { 
+                if(metasDinamicas[m] && metasDinamicas[m][queryKeyKpi]) { 
+                    metaSellOut += metasDinamicas[m][queryKeyKpi].sellout; 
+                    metaCoberturaTotal += metasDinamicas[m][queryKeyKpi].cobertura; 
+                } 
+            });
+            let metaCoberturaVisor = isAccumulated && mesesFiltradosSet.size > 0 ? Math.round(metaCoberturaTotal / mesesFiltradosSet.size) : metaCoberturaTotal;
+            const metaTicket = metaCoberturaTotal > 0 ? metaSellOut / metaCoberturaTotal : 0;
+            const gapValor = totalSellOut - metaSellOut;
+
+            document.getElementById('kpi-sellout').innerText = formatCurrency(totalSellOut);
+            document.getElementById('kpi-clientes').innerText = formatNumber(qtdClientesVisor);
+            document.getElementById('kpi-ticket').innerText = formatCurrency(ticketMedio);
+            document.getElementById('kpi-gap').innerText = (gapValor > 0 ? '+ ' : '') + formatCurrency(gapValor);
+            document.getElementById('meta-sellout').innerText = `Meta: ${formatCurrency(metaSellOut)}`;
+            document.getElementById('meta-clientes').innerText = `Meta: ${formatNumber(metaCoberturaVisor)}`;
+            document.getElementById('meta-ticket').innerText = `Meta Planeada: ${formatCurrency(metaTicket)}`;
+            document.getElementById('status-gap').innerText = gapValor >= 0 ? 'Superávit Gerado' : 'Déficit Gerado';
+
+            const pSell = metaSellOut > 0 ? (totalSellOut / metaSellOut) * 100 : 0;
+            const pCob = metaCoberturaVisor > 0 ? (qtdClientesVisor / metaCoberturaVisor) * 100 : 0;
+            const pTick = metaTicket > 0 ? (ticketMedio / metaTicket) * 100 : 0;
+            const pGap = metaSellOut > 0 ? (gapValor / metaSellOut) * 100 : 0;
+
+            updateBadgeElement('badge-sellout', pSell); updateBadgeElement('badge-clientes', pCob); updateBadgeElement('badge-ticket', pTick);
+            const badgeGap = document.getElementById('badge-gap');
+            if (gapValor >= 0) { badgeGap.className = 'badge-custom badge-success'; badgeGap.innerHTML = `<i class="fas fa-arrow-trend-up"></i> ${Math.abs(pGap).toFixed(1)}%`; }
+            else { badgeGap.className = 'badge-custom badge-danger'; badgeGap.innerHTML = `<i class="fas fa-arrow-trend-down"></i> -${Math.abs(pGap).toFixed(1)}%`; }
+        }
+
+        function updateBadgeElement(id, percentage) {
+            const el = document.getElementById(id);
+            if (percentage >= 100) { el.className = 'badge-custom badge-success'; el.innerHTML = `<i class="fas fa-arrow-trend-up"></i> ${percentage.toFixed(1)}%`; }
+            else if (percentage >= 80) { el.className = 'badge-custom badge-warning'; el.innerHTML = `<i class="fas fa-arrow-trend-down"></i> ${percentage.toFixed(1)}%`; }
+            else { el.className = 'badge-custom badge-danger'; el.innerHTML = `<i class="fas fa-arrow-trend-down"></i> ${percentage.toFixed(1)}%`; }
+        }
+
+        function createOrUpdateChart(chartId, type, data, options) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+            if (chartInstances[chartId]) chartInstances[chartId].destroy();
+            chartInstances[chartId] = new Chart(ctx, { type, data, options });
+        }
+
+        function renderCharts() {
+            const departamentosUnicos = [...new Set(filteredData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            
+            const evoMensal = {}; 
+            mesesOrdenados.forEach(m => {
+                evoMensal[m] = { clientes: new Set() };
+                departamentosUnicos.forEach(d => evoMensal[m][d] = 0);
+            });
+            
+            const deptData = {}; 
+            departamentosUnicos.forEach(d => deptData[d] = { sellout: 0, skus: new Set() });
+            
+            const supData = {}; const vendData = {};
+
+            filteredData.forEach(row => {
+                const mes = row.MES_EXTRATO, dept = row.DEPT_NORM, val = row.VLFAT_NUM;
+                if (evoMensal[mes]) { 
+                    evoMensal[mes][dept] += val; 
+                    if (row.CODCLI) evoMensal[mes].clientes.add(row.CODCLI); 
+                }
+                
+                if (deptData[dept]) {
+                    deptData[dept].sellout += val;
+                    const sku = row.PRODUTO_NOME;
+                    if (sku) deptData[dept].skus.add(sku);
+                }
+
+                supData[row.SUPERVISOR] = (supData[row.SUPERVISOR] || 0) + val;
+                vendData[row.VENDEDOR] = (vendData[row.VENDEDOR] || 0) + val;
+            });
+
+            const labelsMeses = mesesOrdenados.map(m => nomeMeses[m]);
+            const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+
+            createOrUpdateChart('chartEvolucao', 'line', {
+                labels: labelsMeses,
+                datasets: departamentosUnicos.map((dept, i) => ({
+                    label: dept,
+                    data: mesesOrdenados.map(m => evoMensal[m][dept]),
+                    borderColor: getDeptColor(dept, i),
+                    backgroundColor: getDeptColor(dept, i),
+                    tension: 0.3, fill: false
+                })).filter(d => d.data.some(val => val > 0))
+            }, commonOptions);
+
+            const totalPizza = departamentosUnicos.reduce((sum, d) => sum + deptData[d].sellout, 0);
+            createOrUpdateChart('chartPizzaDept', 'doughnut', {
+                labels: departamentosUnicos,
+                datasets: [{ 
+                    data: departamentosUnicos.map(d => deptData[d].sellout), 
+                    backgroundColor: departamentosUnicos.map((d, i) => getDeptColor(d, i)), 
+                    borderWidth: 0 
+                }]
+            }, { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                layout: { padding: 25 },
+                scales: { x: { display: false }, y: { display: false } }, 
+                plugins: { 
+                    legend: { position: 'bottom' }, 
+                    datalabels: { 
+                        display: function(context) { 
+                            if (!context.dataset || !context.dataset.data) return false;
+                            return context.dataset.data[context.dataIndex] > 0 ? 'auto' : false; 
+                        }, 
+                        color: function(context) {
+                            if (!context.dataset || !context.dataset.data) return '#ffffff';
+                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            if (perc >= 10) return '#ffffff';
+                            return document.documentElement.getAttribute('data-theme') === 'dark' ? '#e0e0e0' : '#2d3436';
+                        }, 
+                        anchor: function(context) {
+                            if (!context.dataset || !context.dataset.data) return 'center';
+                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            return perc >= 10 ? 'center' : 'end';
+                        },
+                        align: function(context) {
+                            if (!context.dataset || !context.dataset.data) return 'center';
+                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            return perc >= 10 ? 'center' : 'end';
+                        },
+                        offset: function(context) {
+                            if (!context.dataset || !context.dataset.data) return 0;
+                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            return perc >= 10 ? 0 : 20; 
+                        },
+                        font: { weight: 'bold', size: 11 }, 
+                        formatter: function(value) { 
+                            if (totalPizza === 0) return '0%'; 
+                            return (value / totalPizza * 100).toFixed(1) + '%'; 
+                        } 
+                    } 
+                } 
+            });
+
+            let metaCatVisaoGeral = 'TT';
+            const deptFilterValArray = getCustomSelectValues('filter-departamento');
+            if (deptFilterValArray.length === 1) { metaCatVisaoGeral = deptFilterValArray[0]; }
+
+            let queryKeyVisao = getMetaKey(metaCatVisaoGeral);
+
+            const realMensalArr = mesesOrdenados.map(m => {
+                if (metaCatVisaoGeral === 'TT') return departamentosUnicos.reduce((sum, d) => sum + evoMensal[m][d], 0);
+                return evoMensal[m][metaCatVisaoGeral] || 0;
+            });
+            const metaMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].sellout : 0);
+
+            createOrUpdateChart('chartEvolucaoMeta', 'bar', {
+                labels: labelsMeses,
+                datasets: [
+                    { label: 'Meta 2026 (R$)', type: 'line', data: metaMensalArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false },
+                    { label: 'Realizado (R$)', data: realMensalArr, backgroundColor: coresPadrao.DEFAULT, borderRadius: 4 }
+                ]
+            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, datalabels: { display: false } } });
+
+            const vendSorted = Object.entries(vendData).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            createOrUpdateChart('chartVendedores', 'bar', {
+                labels: vendSorted.map(v => v[0]),
+                datasets: [{ label: 'Sell Out (R$)', data: vendSorted.map(v => v[1]), backgroundColor: '#1abc9c', borderRadius: 4 }]
+            }, { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                indexAxis: 'y', 
+                scales: { 
+                    x: { display: false }, 
+                    y: { 
+                        grid: { display: false }, 
+                        ticks: { 
+                            crossAlign: 'far', autoSkip: false, 
+                            callback: function(value) { 
+                                let label = this.getLabelForValue(value) || ''; 
+                                return label.length > 22 ? label.substring(0, 22) + '...' : label; 
+                            } 
+                        } 
+                    } 
+                }, 
+                layout: { padding: { left: 5, right: 120 } }, 
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { callbacks: { title: function(context) { return context[0].label; } } }, 
+                    datalabels: { display: true, anchor: 'end', align: 'end', color: '#2d3436', font: { weight: 'bold', size: 11 }, formatter: function(value) { return formatCurrency(value); } } 
+                } 
+            });
+
+            createOrUpdateChart('chartPositivacao', 'line', { labels: labelsMeses, datasets: [{ label: 'Qtd Clientes', data: mesesOrdenados.map(m => evoMensal[m].clientes.size), borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.2)', fill: true, tension: 0.4 }] }, commonOptions);
+            
+            createOrUpdateChart('chartMix', 'bar', { 
+                labels: departamentosUnicos, 
+                datasets: [{ 
+                    label: 'Sell Out', 
+                    data: departamentosUnicos.map(d => deptData[d].sellout), 
+                    backgroundColor: departamentosUnicos.map((d, i) => getDeptColor(d, i)), 
+                    borderRadius: 6, maxBarThickness: 55
+                }] 
+            }, { 
+                ...commonOptions,
+                layout: { padding: { left: 15, right: 15 } },
+                scales: { x: { offset: true, grid: { display: false } }, y: { beginAtZero: true } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const index = context.dataIndex;
+                                const skusCount = deptData[departamentosUnicos[index]].skus.size;
+                                return [ `Sell Out: ${formatCurrency(context.raw)}`, `SKUs Distintos: ${skusCount}` ];
+                            }
+                        }
+                    },
+                    datalabels: { display: false }
+                } 
+            });
+        }
+
+        let tableData = [];
+        function renderTable() {
+            const mapVendedores = new Map();
+            filteredData.forEach(row => {
+                const sup = row.SUPERVISOR, vend = row.VENDEDOR, key = sup + '|' + vend;
+                if (!mapVendedores.has(key)) mapVendedores.set(key, { sup, vend, sellout: 0, clientes: new Set() });
+                const entry = mapVendedores.get(key); entry.sellout += row.VLFAT_NUM; if (row.CODCLI) entry.clientes.add(row.CODCLI);
+            });
+            tableData = Array.from(mapVendedores.values()).map(v => ({ sup: v.sup, vend: v.vend, clientes: v.clientes.size, sellout: v.sellout, ticket: v.clientes.size > 0 ? v.sellout / v.clientes.size : 0 })).sort((a,b) => b.sellout - a.sellout);
+            buildTableHTML();
+        }
+
+        function buildTableHTML() {
+            const tbody = document.getElementById('table-body'); tbody.innerHTML = '';
+            tableData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${row.sup}</td><td>${row.vend}</td><td class="text-end">${formatNumber(row.clientes)}</td><td class="text-end fw-bold text-primary">${formatCurrency(row.sellout)}</td><td class="text-end">${formatCurrency(row.ticket)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let sortDirections = [1, 1, 1, 1, 1];
+        function sortTable(columnIndex) {
+            const keys = ['sup', 'vend', 'clientes', 'sellout', 'ticket'], key = keys[columnIndex], dir = sortDirections[columnIndex];
+            tableData.sort((a, b) => typeof a[key] === 'string' ? dir * a[key].localeCompare(b[key]) : dir * (a[key] - b[key]));
+            sortDirections[columnIndex] *= -1; buildTableHTML();
+        }
+
+        let modalVendData = []; let modalVendDepts = []; let sortModalDir = { vend: 1, clientes: 1, sellout: 1 };
+        
+        function showVendedoresModal() {
+            modalVendDepts = [...new Set(filteredData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            const mapVendedores = new Map();
+            
+            filteredData.forEach(row => {
+                const vend = row.VENDEDOR;
+                if (!mapVendedores.has(vend)) {
+                    let initialDeptValues = {}; modalVendDepts.forEach(d => initialDeptValues[d] = 0);
+                    mapVendedores.set(vend, { vend: vend, sellout: 0, depts: initialDeptValues, clientes: new Set() });
+                }
+                const entry = mapVendedores.get(vend);
+                entry.sellout += row.VLFAT_NUM; entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                if (row.CODCLI) entry.clientes.add(row.CODCLI);
+            });
+            
+            modalVendData = Array.from(mapVendedores.values()).map(v => ({ vend: v.vend, sellout: v.sellout, depts: v.depts, clientes: v.clientes.size }));
+            sortModalDir = { vend: 1, clientes: 1, sellout: -1 }; modalVendDepts.forEach(d => sortModalDir['dept_'+d] = 1);
+            modalVendData.sort((a, b) => b.sellout - a.sellout);
+            renderModalVendedoresHead(); renderModalVendedoresBody();
+            new bootstrap.Modal(document.getElementById('modalVendedores')).show();
+        }
+
+        function renderModalVendedoresHead() {
+            const thead = document.getElementById('modal-vendedores-head');
+            let html = `<tr><th class="ps-4">Posição</th><th onclick="sortModalTable('vend')">Vendedor <i class="fas fa-sort ms-1"></i></th><th class="text-center" onclick="sortModalTable('clientes')">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>`;
+            modalVendDepts.forEach(d => { html += `<th class="text-end" onclick="sortModalTable('dept_${d}')">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; });
+            html += `<th class="text-end pe-4" onclick="sortModalTable('sellout')">Total (R$) <i class="fas fa-sort ms-1"></i></th></tr>`;
+            thead.innerHTML = html;
+        }
+
+        function renderModalVendedoresBody() {
+            const tbody = document.getElementById('modal-vendedores-body'); tbody.innerHTML = '';
+            modalVendData.forEach((v, index) => {
+                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`;
+                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`;
+                
+                let trHtml = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${v.vend}</td><td class="text-center align-middle">${formatNumber(v.clientes)}</td>`;
+                modalVendDepts.forEach(d => { trHtml += `<td class="text-end align-middle text-muted">${formatCurrency(v.depts[d])}</td>`; });
+                trHtml += `<td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(v.sellout)}</td>`;
+                
+                const tr = document.createElement('tr'); tr.innerHTML = trHtml; tbody.appendChild(tr);
+            });
+        }
+
+        function sortModalTable(key) {
+            const dir = sortModalDir[key];
+            modalVendData.sort((a, b) => {
+                if(key === 'vend') return dir * a.vend.localeCompare(b.vend);
+                if(key === 'clientes') return dir * (a.clientes - b.clientes);
+                if(key === 'sellout') return dir * (a.sellout - b.sellout);
+                if(key.startsWith('dept_')) return dir * (a.depts[key.replace('dept_', '')] - b.depts[key.replace('dept_', '')]);
+                return 0;
+            });
+            sortModalDir[key] *= -1; renderModalVendedoresBody();
+        }
+
+        let modalProdData = [], sortProdModalDir = { prod: 1, dept: 1, clientes: 1, qtd: 1, sellout: 1 };
+        function showProdutosModal() {
+            const mapProdutos = new Map();
+            filteredData.forEach(row => {
+                const prodName = row.PRODUTO_NOME;
+                if (!mapProdutos.has(prodName)) mapProdutos.set(prodName, { prod: prodName, dept: row.DEPT_NORM, sellout: 0, qtd: 0, clientes: new Set() });
+                const entry = mapProdutos.get(prodName);
+                entry.sellout += row.VLFAT_NUM; entry.qtd += row.QTD_NUM;
+                if (row.CODCLI) entry.clientes.add(row.CODCLI);
+            });
+            modalProdData = Array.from(mapProdutos.values()).map(p => ({ prod: p.prod, dept: p.dept, sellout: p.sellout, qtd: p.qtd, clientes: p.clientes.size }));
+            sortProdModalDir['sellout'] = -1; modalProdData.sort((a, b) => b.sellout - a.sellout);
+            renderProdModalTableBody();
+            new bootstrap.Modal(document.getElementById('modalProdutos')).show();
+        }
+
+        function renderProdModalTableBody() {
+            const tbody = document.getElementById('modal-produtos-body'); tbody.innerHTML = '';
+            let uniqueDepts = [...new Set(filteredData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+
+            modalProdData.forEach((p, index) => {
+                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`;
+                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`;
+                
+                let bgCol = getDeptColor(p.dept, uniqueDepts.indexOf(p.dept));
+                let deptBadge = `<span class="badge" style="background-color: ${bgCol}; color: white;">${p.dept}</span>`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${p.prod}</td><td class="text-center align-middle">${deptBadge}</td><td class="text-center align-middle">${formatNumber(p.clientes)}</td><td class="text-center align-middle fw-bold text-muted">${formatNumber(p.qtd)}</td><td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(p.sellout)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function sortProdModalTable(key) {
+            const dir = sortProdModalDir[key];
+            modalProdData.sort((a, b) => typeof a[key] === 'string' ? dir * a[key].localeCompare(b[key]) : dir * (a[key] - b[key]));
+            sortProdModalDir[key] *= -1; renderProdModalTableBody();
+        }
+
+        function changeMetaCategory(cat) {
+            currentMetaCategory = cat;
+            const catName = cat === 'TT' ? 'TOTAL GERAL' : cat;
+            document.getElementById('title-table-metas').innerText = `Detalhamento Mensal de Metas (${catName})`;
+            document.getElementById('title-chart-meta-sellout').innerText = `Acompanhamento Sell Out: Meta vs Realizado (${catName})`;
+            document.getElementById('title-chart-meta-cob').innerText = `Acompanhamento Cobertura: Meta vs Realizado (${catName})`;
+            renderMetas();
+        }
+
+        function renderMetas() {
+            const realizadoMes = {}; mesesOrdenados.forEach(m => realizadoMes[m] = { sellout: 0, clientes: new Set() });
+            globalData.forEach(row => {
+                const mes = row.MES_EXTRATO;
+                if (currentMetaCategory !== 'TT' && row.DEPT_NORM !== currentMetaCategory) return;
+                if (realizadoMes[mes]) { realizadoMes[mes].sellout += row.VLFAT_NUM; if(row.CODCLI) realizadoMes[mes].clientes.add(row.CODCLI); }
+            });
+
+            const labels = mesesOrdenados.map(m => nomeMeses[m]);
+            
+            let queryKey = getMetaKey(currentMetaCategory);
+
+            const metaSellOutArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKey]) ? metasDinamicas[m][queryKey].sellout : 0);
+            const realSellOutArr = mesesOrdenados.map(m => realizadoMes[m].sellout);
+            const metaCobArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKey]) ? metasDinamicas[m][queryKey].cobertura : 0);
+            const realCobArr = mesesOrdenados.map(m => realizadoMes[m].clientes.size);
+            
+            let uniqueDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            let corGrafico = coresPadrao.DEFAULT; 
+            if(currentMetaCategory !== 'TT') corGrafico = getDeptColor(currentMetaCategory, uniqueDepts.indexOf(currentMetaCategory));
+
+            createOrUpdateChart('chartMetaSellOut', 'bar', { labels: labels, datasets: [ { label: `Meta (R$)`, type: 'line', data: metaSellOutArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false }, { label: `Realizado (R$)`, data: realSellOutArr, backgroundColor: corGrafico, borderRadius: 4 } ] }, { responsive: true, maintainAspectRatio: false });
+            createOrUpdateChart('chartMetaCobertura', 'line', { labels: labels, datasets: [ { label: `Meta Cobertura (Cli)`, data: metaCobArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false, tension: 0.1 }, { label: `Realizado Cobertura (Cli)`, data: realCobArr, borderColor: corGrafico, backgroundColor: `rgba(${parseInt(corGrafico.slice(1, 3), 16) || 15}, ${parseInt(corGrafico.slice(3, 5), 16) || 76}, ${parseInt(corGrafico.slice(5, 7), 16) || 129}, 0.2)`, fill: true, tension: 0.3 } ] }, { responsive: true, maintainAspectRatio: false });
+
+            const tMetasBody = document.getElementById('table-metas-body'); tMetasBody.innerHTML = '';
+            let tMetaSell = 0, tRealSell = 0, tMetaCob = 0, tRealCob = 0, qtdMesesRealizados = 0;
+
+            mesesOrdenados.forEach(m => {
+                const mSell = (metasDinamicas[m] && metasDinamicas[m][queryKey]) ? metasDinamicas[m][queryKey].sellout : 0;
+                const rSell = realizadoMes[m].sellout;
+                const mCob = (metasDinamicas[m] && metasDinamicas[m][queryKey]) ? metasDinamicas[m][queryKey].cobertura : 0;
+                const rCob = realizadoMes[m].clientes.size;
+                
+                tMetaSell += mSell; tRealSell += rSell; tMetaCob += mCob; tRealCob += rCob;
+                if (rSell > 0 || rCob > 0) qtdMesesRealizados++;
+                const percSell = mSell > 0 ? (rSell/mSell)*100 : 0, percCob = mCob > 0 ? (rCob/mCob)*100 : 0;
+                const getBadge = (p, realValue, mValue) => { 
+                    if (mValue === 0 && realValue > 0) return `<span class="badge" style="background-color: #27ae60; color: white;">+∞</span>`; 
+                    if (realValue === 0 && mValue === 0) return `<span class="text-muted fw-normal">-</span>`; 
+                    if (p >= 100) return `<span class="badge" style="background-color: #27ae60; color: white;">${p.toFixed(1)}%</span>`; 
+                    if (p >= 90) return `<span class="badge" style="background-color: #f1c40f; color: #2d3436;">${p.toFixed(1)}%</span>`; 
+                    return `<span class="badge" style="background-color: #e74c3c; color: white;">${p.toFixed(1)}%</span>`; 
+                };
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="fw-bold">${nomeMeses[m]}</td><td class="text-end text-dark fw-bold">${formatCurrency(mSell)}</td><td class="text-end fw-bold">${rSell > 0 ? formatCurrency(rSell) : '<span class="text-muted">-</span>'}</td><td class="text-center">${getBadge(percSell, rSell, mSell)}</td><td class="text-end text-dark fw-bold">${formatNumber(mCob)}</td><td class="text-end fw-bold">${rCob > 0 ? formatNumber(rCob) : '<span class="text-muted">-</span>'}</td><td class="text-center">${getBadge(percCob, rCob, mCob)}</td>`;
+                tMetasBody.appendChild(tr);
+            });
+
+            const mediaMetaCob = Math.round(tMetaCob / 12), mediaRealCob = qtdMesesRealizados > 0 ? Math.round(tRealCob / qtdMesesRealizados) : 0, percTotalCob = mediaMetaCob > 0 ? (mediaRealCob / mediaMetaCob) * 100 : 0;
+            const trTotal = document.createElement('tr'); trTotal.classList.add('table-light', 'fw-bold');
+            trTotal.innerHTML = `<td>TOTAL / MÉDIA</td><td class="text-end text-dark">${formatCurrency(tMetaSell)}</td><td class="text-end text-primary">${formatCurrency(tRealSell)}</td><td class="text-center">${tMetaSell > 0 ? (tRealSell/tMetaSell*100).toFixed(1) : 0}%</td><td class="text-end text-dark" title="Média Anual">${formatNumber(mediaMetaCob)}</td><td class="text-end text-primary" title="Média dos Meses Realizados">${formatNumber(mediaRealCob)}</td><td class="text-center">${percTotalCob > 0 ? percTotalCob.toFixed(1) + '%' : '-'}</td>`;
+            tMetasBody.appendChild(trTotal);
+        }
+
+        function exportTableToCSV(filename) {
+            let csv = []; const rows = document.querySelectorAll("#analytical-table tr");
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                csv.push(row.join(";"));
+            }
+            const csvFile = new Blob(["\uFEFF"+csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+            const downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click();
+        }
+
+        function exportModalToPDF(event, type) {
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> A Gerar...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('landscape'); 
+
+                    const titleText = type === 'vendedores' ? 'Ranking Completo de Vendedores' : 'Detalhamento de Produtos Vendidos';
+                    const dataAtual = new Date().toLocaleString('pt-PT');
+
+                    doc.setFontSize(16);
+                    doc.setTextColor(15, 76, 129); 
+                    doc.text("DASHBOARD COMERCIAL", 14, 20);
+
+                    doc.setFontSize(12);
+                    doc.setTextColor(75, 101, 132);
+                    doc.text(titleText, 14, 27);
+
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('Acompanhamento Condor', doc.internal.pageSize.width - 14, 20, { align: 'right' });
+                    
+                    doc.setFontSize(9);
+                    doc.text(`Gerado em: ${dataAtual}`, doc.internal.pageSize.width - 14, 26, { align: 'right' });
+
+                    doc.setDrawColor(15, 76, 129);
+                    doc.setLineWidth(0.5);
+                    doc.line(14, 32, doc.internal.pageSize.width - 14, 32);
+
+                    let head = [];
+                    let body = [];
+
+                    const cleanStr = (str) => String(str).replace(/\u00A0/g, ' ');
+
+                    if (type === 'vendedores') {
+                        head = [['Posição', 'Vendedor', 'Clientes Posit.', ...modalVendDepts.map(d => d + ' (R$)'), 'Total (R$)']];
+                        body = modalVendData.map((v, index) => [
+                            `${index + 1}º`,
+                            v.vend,
+                            formatNumber(v.clientes),
+                            ...modalVendDepts.map(d => cleanStr(formatCurrency(v.depts[d]))),
+                            cleanStr(formatCurrency(v.sellout))
+                        ]);
+                    } else {
+                        head = [['Posição', 'Produto / SKU', 'Departamento', 'Clientes Posit.', 'Qtd Vendida', 'Sell Out (R$)']];
+                        body = modalProdData.map((p, index) => [
+                            `${index + 1}º`,
+                            p.prod,
+                            p.dept,
+                            formatNumber(p.clientes),
+                            formatNumber(p.qtd),
+                            cleanStr(formatCurrency(p.sellout))
+                        ]);
+                    }
+
+                    doc.autoTable({
+                        startY: 38, head: head, body: body, theme: 'striped',
+                        headStyles: { fillColor: [15, 76, 129], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+                        styles: { fontSize: 9, cellPadding: 4, textColor: [45, 52, 54] },
+                        alternateRowStyles: { fillColor: [245, 247, 250] },
+                        didParseCell: function(data) {
+                            if (data.section === 'body') {
+                                if (data.column.index === 0) data.cell.styles.halign = 'center'; 
+                                if (type === 'vendedores') {
+                                    if (data.column.index === 2) data.cell.styles.halign = 'center'; 
+                                    if (data.column.index > 2) data.cell.styles.halign = 'right'; 
+                                } else { 
+                                    if (data.column.index === 2) data.cell.styles.halign = 'center'; 
+                                    if ([3, 4, 5].includes(data.column.index)) data.cell.styles.halign = 'right'; 
+                                }
+                            }
+                        }
+                    });
+
+                    doc.save(`Dashboard_${titleText.replace(/\s+/g, '_')}.pdf`);
+                } catch (error) {
+                    console.error("Erro ao gerar PDF:", error);
+                    customAlert("Ocorreu um erro ao gerar a tabela em PDF. Verifica a consola.");
+                } finally {
+                    btn.innerHTML = originalHTML; btn.disabled = false;
+                }
+            }, 100);
+        }
+    </script>
+</body>
+</html>
