@@ -251,11 +251,24 @@
             transition: background 0.3s, border-color 0.3s;
         }
 
+        /* IDENTIFICAÇÃO VISUAL DE FILTROS ATIVOS */
+        .form-select.has-filter, .custom-multi-select .select-btn.has-filter {
+            border: 2px solid var(--primary-color) !important;
+            background-color: rgba(0, 0, 0, 0.03) !important;
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            box-shadow: 0 0 8px rgba(0,0,0,0.05);
+        }
+        [data-theme="dark"] .form-select.has-filter, [data-theme="dark"] .custom-multi-select .select-btn.has-filter {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
         .form-select {
             border-radius: 8px;
             border: 1px solid var(--kpi-border-color);
             background-color: var(--card-bg);
             color: var(--text-dark);
+            transition: border-color 0.3s, font-weight 0.3s;
         }
 
         /* FILTRO CUSTOMIZADO (MULTI-SELECT) */
@@ -263,7 +276,7 @@
         .custom-multi-select .select-btn {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px 12px; background: var(--card-bg); border: 1px solid var(--kpi-border-color);
-            border-radius: 8px; cursor: pointer; color: var(--text-dark); min-height: 38px; font-size: 0.95rem; transition: border-color 0.3s;
+            border-radius: 8px; cursor: pointer; color: var(--text-dark); min-height: 38px; font-size: 0.95rem; transition: border-color 0.3s, font-weight 0.3s;
         }
         .custom-multi-select .select-btn:hover { border-color: var(--primary-color); }
         .custom-multi-select .btn-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90%; }
@@ -433,6 +446,12 @@
                 <div class="tab-pane fade show active" id="realizado" role="tabpanel" aria-labelledby="realizado-tab">
                     
                     <div class="filter-section" style="overflow: visible !important;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="m-0 fw-bold text-muted"><i class="fas fa-filter me-1"></i> Filtros de Visão</h6>
+                            <button id="btn-clear-filters" class="btn btn-sm btn-outline-danger shadow-sm d-none" onclick="clearAllFilters()" style="border-radius: 6px; font-weight: 600;">
+                                <i class="fas fa-times-circle me-1"></i> Limpar Filtros
+                            </button>
+                        </div>
                         <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-5">
                             <div class="col">
                                 <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">MÊS</label>
@@ -800,62 +819,6 @@
             return '#636e72';
         }
 
-        // ==========================================================================================
-        // 🚨🚨🚨 CÓDIGO DO GOOGLE APPS SCRIPT (COPIE E SUBSTITUA O SEU) 🚨🚨🚨
-        // ==========================================================================================
-        /*
-          A sua versão antiga ( var files = folder.getFilesByType(MimeType.CSV); )
-          estava bloqueando qualquer ficheiro Excel ou Google Sheets!
-          
-          Copie TODO o código abaixo e cole no seu painel do Google Apps Script
-          (Não se esqueça de clicar em "Implantar" -> "Nova implantação" após colar):
-
-          function doGet(e) {
-            var folderId = '1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI';
-            var folder = DriveApp.getFolderById(folderId);
-            var files = folder.getFiles(); // <--- Agora puxa TODOS os ficheiros!
-            var fileContents = [];
-
-            while (files.hasNext()) {
-              var file = files.next();
-              var mime = file.getMimeType();
-              var name = file.getName();
-
-              // 1. LER ARQUIVOS CSV
-              if (mime === MimeType.CSV || name.toLowerCase().indexOf('.csv') > -1) {
-                fileContents.push({
-                  name: name,
-                  type: 'csv',
-                  content: file.getBlob().getDataAsString("UTF-8")
-                });
-              }
-              // 2. LER ARQUIVOS EXCEL (.xlsx, .xls) E ENVIAR EM BASE64
-              else if (mime === MimeType.MICROSOFT_EXCEL || mime === MimeType.MICROSOFT_EXCEL_LEGACY || name.toLowerCase().indexOf('.xlsx') > -1) {
-                fileContents.push({
-                  name: name,
-                  type: 'excel',
-                  content: Utilities.base64Encode(file.getBlob().getBytes())
-                });
-              }
-              // 3. LER PLANILHAS NATIVAS DO GOOGLE SHEETS
-              else if (mime === MimeType.GOOGLE_SHEETS) {
-                 var url = "https://docs.google.com/spreadsheets/d/" + file.getId() + "/export?format=xlsx";
-                 var options = { headers: { "Authorization": "Bearer " + ScriptApp.getOAuthToken() } };
-                 var response = UrlFetchApp.fetch(url, options);
-                 fileContents.push({
-                   name: name + ".xlsx",
-                   type: 'excel',
-                   content: Utilities.base64Encode(response.getBlob().getBytes())
-                 });
-              }
-            }
-
-            return ContentService.createTextOutput(JSON.stringify(fileContents))
-              .setMimeType(ContentService.MimeType.JSON);
-          }
-        */
-        // ==========================================================================================
-
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpiWiHGAkidy4APu4Bm9B1wNFXXsmOTw8IrZ87E8QDPAYZ5dFIXr7nEI_yEADO2-Tn/exec'; 
 
         const coresPadrao = { LIM: '#e74c3c', HIG: '#00cec9', BEL: '#fd79a8', DEFAULT: '#0f4c81' };
@@ -963,7 +926,6 @@
                     let upperName = fileData.name.toUpperCase();
                     let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
                     
-                    // Condição Nova: Receber e ler o arquivo do tipo EXCEL processado e enviado pelo novo script
                     if (fileData.type === 'excel' || upperName.endsWith('.XLSX') || upperName.endsWith('.XLS')) {
                         try {
                             const binaryString = window.atob(fileData.content);
@@ -999,7 +961,6 @@
                         if (filesProcessed === data.length) finalizeDataLoading();
                         
                     } else {
-                        // Leitura tradicional de CSV do Script
                         let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
                         if (upperName.includes('FINANC')) type = 'financeiro';
                         else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
@@ -1321,11 +1282,75 @@
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
         }
 
+        // NOVO: Função para limpar todos os filtros com 1 clique
+        function clearAllFilters() {
+            document.getElementById('filter-mes').value = '';
+            
+            ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
+                const container = document.getElementById(id);
+                if(container) {
+                    const cbTodos = container.querySelector('.cb-todos');
+                    const cbItems = container.querySelectorAll('.cb-item');
+                    const btnText = container.querySelector('.btn-text');
+                    
+                    if(cbTodos) cbTodos.checked = true;
+                    if(cbItems) cbItems.forEach(cb => cb.checked = false);
+                    if(btnText) btnText.textContent = 'Todos';
+                }
+            });
+            
+            applyFilters();
+        }
+
         function applyFilters() {
             const mes = document.getElementById('filter-mes').value;
-            const sups = getCustomSelectValues('filter-supervisor'), vends = getCustomSelectValues('filter-vendedor'), depts = getCustomSelectValues('filter-departamento'), cids = getCustomSelectValues('filter-cidade');
+            const sups = getCustomSelectValues('filter-supervisor');
+            const vends = getCustomSelectValues('filter-vendedor');
+            const depts = getCustomSelectValues('filter-departamento');
+            const cids = getCustomSelectValues('filter-cidade');
+            
+            let hasAnyFilter = false;
+            
+            // Adiciona destaque visual no filtro de mês
+            const mesEl = document.getElementById('filter-mes');
+            if (mes !== "") {
+                mesEl.classList.add('has-filter');
+                hasAnyFilter = true;
+            } else {
+                mesEl.classList.remove('has-filter');
+            }
+
+            // Adiciona destaque visual nos filtros customizados
+            const checkCustomFilter = (id, arr) => {
+                const el = document.querySelector(`#${id} .select-btn`);
+                if (el) {
+                    if (arr.length > 0) {
+                        el.classList.add('has-filter');
+                        hasAnyFilter = true;
+                    } else {
+                        el.classList.remove('has-filter');
+                    }
+                }
+            };
+
+            checkCustomFilter('filter-supervisor', sups);
+            checkCustomFilter('filter-vendedor', vends);
+            checkCustomFilter('filter-departamento', depts);
+            checkCustomFilter('filter-cidade', cids);
+
+            // Mostra ou esconde o botão de Limpar Filtros
+            const btnClear = document.getElementById('btn-clear-filters');
+            if(btnClear) {
+                if(hasAnyFilter) btnClear.classList.remove('d-none');
+                else btnClear.classList.add('d-none');
+            }
+
             filteredData = globalData.filter(row => {
-                return (!mes || row.MES_EXTRATO === mes) && (sups.length === 0 || sups.includes(row.SUPERVISOR)) && (vends.length === 0 || vends.includes(row.VENDEDOR)) && (depts.length === 0 || depts.includes(row.DEPT_NORM)) && (cids.length === 0 || cids.includes(row.CIDADE));
+                return (!mes || row.MES_EXTRATO === mes) && 
+                       (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
+                       (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
+                       (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
+                       (cids.length === 0 || cids.includes(row.CIDADE));
             });
             updateDashboard();
         }
@@ -1447,16 +1472,13 @@
             const labelsMeses = mesesOrdenados.map(m => nomeMeses[m]);
             const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
 
-            // Lógica inteligente para Eixo Duplo (Dual Axis) se houver um departamento desproporcional
             const deptMaxes = departamentosUnicos.map(dept => Math.max(...mesesOrdenados.map(m => evoMensal[m][dept] || 0)));
             const sortedMaxes = [...deptMaxes].sort((a,b) => b - a);
             
-            // Se o maior for mais de 3x maior que o segundo, ativamos o eixo duplo
             const isHighlySkewed = sortedMaxes.length > 1 && sortedMaxes[1] > 0 && (sortedMaxes[0] / sortedMaxes[1] > 3);
             const outlierDeptIndex = deptMaxes.indexOf(sortedMaxes[0]);
             const outlierDeptName = departamentosUnicos[outlierDeptIndex];
 
-            // Captura o teto das categorias menores
             const maxDemais = isHighlySkewed ? sortedMaxes[1] : sortedMaxes[0];
 
             const datasetsEvolucao = departamentosUnicos.map((dept, i) => {
@@ -1467,7 +1489,7 @@
                     borderColor: getDeptColor(dept, i),
                     backgroundColor: getDeptColor(dept, i),
                     tension: 0.3, fill: false,
-                    yAxisID: isOutlier ? 'y2' : 'y' // Separa o eixo se for o gigante
+                    yAxisID: isOutlier ? 'y2' : 'y' 
                 };
             }).filter(d => d.data.some(val => val > 0));
 
@@ -1492,14 +1514,13 @@
                         beginAtZero: true,
                         ticks: { 
                             callback: function(value) { 
-                                // Visual mais limpo para os milhões no eixo direito
                                 if(value >= 1000000) return (value / 1000000) + ' Mi';
                                 if(value >= 1000) return (value / 1000) + ' mil';
                                 return formatCurrency(value); 
                             } 
                         },
                         title: { display: true, text: outlierDeptName, font: { size: 10, weight: 'bold' } },
-                        grid: { drawOnChartArea: false } // Evita grelha sobreposta e confusa
+                        grid: { drawOnChartArea: false } 
                     }
                 };
             } else {
@@ -1508,13 +1529,10 @@
                 };
             }
 
-            // AJUSTE DINÂMICO PARA CATEGORIAS MENORES: Eixo 0, 40, subindo de 20 em 20 mil
             if (maxDemais > 40000) {
                 evolucaoOptions.scales.y.min = 0;
-                // Garante que o gráfico estica visualmente até os 200mil (ou além se as vendas superarem isso)
                 evolucaoOptions.scales.y.max = Math.max(200000, Math.ceil(maxDemais / 20000) * 20000);
                 
-                // Constrói as réguas exatas: 0, 40k, 60k, 80k...
                 evolucaoOptions.scales.y.afterBuildTicks = function(scale) {
                     let customTicks = [0, 40000];
                     let current = 60000;
@@ -1525,7 +1543,6 @@
                     scale.ticks = customTicks.map(v => ({ value: v }));
                 };
 
-                // Torna a leitura do eixo muito mais visual e espaçada ("40 mil" em vez de "R$ 40.000,00")
                 evolucaoOptions.scales.y.ticks.callback = function(value) {
                     if (value === 0) return '0';
                     if (value >= 1000) return (value / 1000) + ' mil';
