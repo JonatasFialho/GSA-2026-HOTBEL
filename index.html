@@ -46,17 +46,17 @@
             --header-subtext-color: var(--text-muted);
         }
 
-        [data-theme="red-bg"] {
-            --primary-color: #922b21; 
-            --bg-color: #fadbd8;
-            --header-bg: #c0392b; 
+        [data-theme="blue-bg"] {
+            --primary-color: #154360; 
+            --bg-color: #d4e6f1;
+            --header-bg: #2980b9; 
             --card-bg: #ffffff;
             --text-dark: #2d3436;
             --text-muted: #636e72;
-            --border-color: #f1eaeb;
-            --kpi-border-color: #f1eaeb;
-            --content-border-color: #f1eaeb;
-            --meta-chart-border: #f1eaeb;
+            --border-color: #e8f0fe;
+            --kpi-border-color: #e8f0fe;
+            --content-border-color: #e8f0fe;
+            --meta-chart-border: #e8f0fe;
             --icon-bg: #f8f9fa;
             --header-title-color: #ffffff; 
             --header-subtext-color: rgba(255, 255, 255, 0.85); 
@@ -381,7 +381,7 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
                         <li><a class="dropdown-item" href="#" onclick="setTheme('default')"><i class="fas fa-circle me-2" style="color: #0f4c81;"></i> Padrão</a></li>
                         <li><a class="dropdown-item" href="#" onclick="setTheme('light-red-cards')"><i class="fas fa-square me-2" style="color: #fff0f0; border: 1px solid #ccc;"></i> Claro (Vermelho)</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="setTheme('red-bg')"><i class="fas fa-fill-drip me-2" style="color: #fadbd8;"></i> Fundo Vermelho</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="setTheme('blue-bg')"><i class="fas fa-fill-drip me-2" style="color: #d4e6f1;"></i> Fundo Azul</a></li>
                         <li><a class="dropdown-item" href="#" onclick="setTheme('dark')"><i class="fas fa-moon me-2" style="color: #2d3436;"></i> Escuro</a></li>
                     </ul>
                 </div>
@@ -1447,16 +1447,96 @@
             const labelsMeses = mesesOrdenados.map(m => nomeMeses[m]);
             const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
 
-            createOrUpdateChart('chartEvolucao', 'line', {
-                labels: labelsMeses,
-                datasets: departamentosUnicos.map((dept, i) => ({
+            // Lógica inteligente para Eixo Duplo (Dual Axis) se houver um departamento desproporcional
+            const deptMaxes = departamentosUnicos.map(dept => Math.max(...mesesOrdenados.map(m => evoMensal[m][dept] || 0)));
+            const sortedMaxes = [...deptMaxes].sort((a,b) => b - a);
+            
+            // Se o maior for mais de 3x maior que o segundo, ativamos o eixo duplo
+            const isHighlySkewed = sortedMaxes.length > 1 && sortedMaxes[1] > 0 && (sortedMaxes[0] / sortedMaxes[1] > 3);
+            const outlierDeptIndex = deptMaxes.indexOf(sortedMaxes[0]);
+            const outlierDeptName = departamentosUnicos[outlierDeptIndex];
+
+            // Captura o teto das categorias menores
+            const maxDemais = isHighlySkewed ? sortedMaxes[1] : sortedMaxes[0];
+
+            const datasetsEvolucao = departamentosUnicos.map((dept, i) => {
+                const isOutlier = isHighlySkewed && dept === outlierDeptName;
+                return {
                     label: dept,
                     data: mesesOrdenados.map(m => evoMensal[m][dept]),
                     borderColor: getDeptColor(dept, i),
                     backgroundColor: getDeptColor(dept, i),
-                    tension: 0.3, fill: false
-                })).filter(d => d.data.some(val => val > 0))
-            }, commonOptions);
+                    tension: 0.3, fill: false,
+                    yAxisID: isOutlier ? 'y2' : 'y' // Separa o eixo se for o gigante
+                };
+            }).filter(d => d.data.some(val => val > 0));
+
+            let evolucaoOptions = { 
+                responsive: true, maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw); } } }
+                }
+            };
+
+            if (isHighlySkewed) {
+                evolucaoOptions.scales = {
+                    y: {
+                        type: 'linear', display: true, position: 'left',
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return formatCurrency(value); } },
+                        title: { display: true, text: 'Demais Depts', font: { size: 10 } }
+                    },
+                    y2: {
+                        type: 'linear', display: true, position: 'right',
+                        beginAtZero: true,
+                        ticks: { 
+                            callback: function(value) { 
+                                // Visual mais limpo para os milhões no eixo direito
+                                if(value >= 1000000) return (value / 1000000) + ' Mi';
+                                if(value >= 1000) return (value / 1000) + ' mil';
+                                return formatCurrency(value); 
+                            } 
+                        },
+                        title: { display: true, text: outlierDeptName, font: { size: 10, weight: 'bold' } },
+                        grid: { drawOnChartArea: false } // Evita grelha sobreposta e confusa
+                    }
+                };
+            } else {
+                evolucaoOptions.scales = {
+                    y: { beginAtZero: true, ticks: { callback: function(value) { return formatCurrency(value); } } }
+                };
+            }
+
+            // AJUSTE DINÂMICO PARA CATEGORIAS MENORES: Eixo 0, 40, subindo de 20 em 20 mil
+            if (maxDemais > 40000) {
+                evolucaoOptions.scales.y.min = 0;
+                // Garante que o gráfico estica visualmente até os 200mil (ou além se as vendas superarem isso)
+                evolucaoOptions.scales.y.max = Math.max(200000, Math.ceil(maxDemais / 20000) * 20000);
+                
+                // Constrói as réguas exatas: 0, 40k, 60k, 80k...
+                evolucaoOptions.scales.y.afterBuildTicks = function(scale) {
+                    let customTicks = [0, 40000];
+                    let current = 60000;
+                    while (current <= scale.max) {
+                        customTicks.push(current);
+                        current += 20000;
+                    }
+                    scale.ticks = customTicks.map(v => ({ value: v }));
+                };
+
+                // Torna a leitura do eixo muito mais visual e espaçada ("40 mil" em vez de "R$ 40.000,00")
+                evolucaoOptions.scales.y.ticks.callback = function(value) {
+                    if (value === 0) return '0';
+                    if (value >= 1000) return (value / 1000) + ' mil';
+                    return formatCurrency(value);
+                };
+            }
+
+            createOrUpdateChart('chartEvolucao', 'line', {
+                labels: labelsMeses,
+                datasets: datasetsEvolucao
+            }, evolucaoOptions);
 
             const totalPizza = departamentosUnicos.reduce((sum, d) => sum + deptData[d].sellout, 0);
             createOrUpdateChart('chartPizzaDept', 'doughnut', {
