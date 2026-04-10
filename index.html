@@ -801,21 +801,62 @@
         }
 
         // ==========================================================================================
-        // 🚨🚨🚨 CONFIGURAÇÃO DO GOOGLE DRIVE E APPS SCRIPT (ALTERE AQUI) 🚨🚨🚨
+        // 🚨🚨🚨 CÓDIGO DO GOOGLE APPS SCRIPT (COPIE E SUBSTITUA O SEU) 🚨🚨🚨
         // ==========================================================================================
-        // 1. LINK DA SUA PASTA NO DRIVE:
-        // https://drive.google.com/drive/folders/1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI?usp=sharing
-        // 
-        // -> O ID DA SUA PASTA É: 1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI
-        // IMPORTANTE: Esse ID precisa ser colocado no código '.gs' do seu Google Apps Script 
-        // para que ele saiba qual pasta do Drive ele deve ler.
-        //
-        // 2. LINK DO SCRIPT (WEB APP URL):
-        // Cole abaixo o link gerado pelo seu Google Apps Script (que terminará em /exec). 
-        // É este link que fará a ponte entre o seu HTML e a sua pasta do Google Drive.
+        /*
+          A sua versão antiga ( var files = folder.getFilesByType(MimeType.CSV); )
+          estava bloqueando qualquer ficheiro Excel ou Google Sheets!
+          
+          Copie TODO o código abaixo e cole no seu painel do Google Apps Script
+          (Não se esqueça de clicar em "Implantar" -> "Nova implantação" após colar):
+
+          function doGet(e) {
+            var folderId = '1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI';
+            var folder = DriveApp.getFolderById(folderId);
+            var files = folder.getFiles(); // <--- Agora puxa TODOS os ficheiros!
+            var fileContents = [];
+
+            while (files.hasNext()) {
+              var file = files.next();
+              var mime = file.getMimeType();
+              var name = file.getName();
+
+              // 1. LER ARQUIVOS CSV
+              if (mime === MimeType.CSV || name.toLowerCase().indexOf('.csv') > -1) {
+                fileContents.push({
+                  name: name,
+                  type: 'csv',
+                  content: file.getBlob().getDataAsString("UTF-8")
+                });
+              }
+              // 2. LER ARQUIVOS EXCEL (.xlsx, .xls) E ENVIAR EM BASE64
+              else if (mime === MimeType.MICROSOFT_EXCEL || mime === MimeType.MICROSOFT_EXCEL_LEGACY || name.toLowerCase().indexOf('.xlsx') > -1) {
+                fileContents.push({
+                  name: name,
+                  type: 'excel',
+                  content: Utilities.base64Encode(file.getBlob().getBytes())
+                });
+              }
+              // 3. LER PLANILHAS NATIVAS DO GOOGLE SHEETS
+              else if (mime === MimeType.GOOGLE_SHEETS) {
+                 var url = "https://docs.google.com/spreadsheets/d/" + file.getId() + "/export?format=xlsx";
+                 var options = { headers: { "Authorization": "Bearer " + ScriptApp.getOAuthToken() } };
+                 var response = UrlFetchApp.fetch(url, options);
+                 fileContents.push({
+                   name: name + ".xlsx",
+                   type: 'excel',
+                   content: Utilities.base64Encode(response.getBlob().getBytes())
+                 });
+              }
+            }
+
+            return ContentService.createTextOutput(JSON.stringify(fileContents))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        */
         // ==========================================================================================
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrCsb6M_UdluiEe-cBFRElV7U17xnGE1VelVqt4fsHjKI24atIN_UccmZto0BVdkAF/exec'; 
-        // ==========================================================================================
+
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpiWiHGAkidy4APu4Bm9B1wNFXXsmOTw8IrZ87E8QDPAYZ5dFIXr7nEI_yEADO2-Tn/exec'; 
 
         const coresPadrao = { LIM: '#e74c3c', HIG: '#00cec9', BEL: '#fd79a8', DEFAULT: '#0f4c81' };
         const mesesOrdenados = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
@@ -833,33 +874,27 @@
         const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
         const formatNumber = (value) => new Intl.NumberFormat('pt-BR').format(value);
 
-        // PADRONIZAÇÃO REMOVEDORA DE ESPAÇOS PARA EVITAR BUGS DE NOME
         function standardizeString(s) {
             if (!s) return '';
             return String(s).toUpperCase()
-                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
-                .replace(/[^A-Z0-9]/g, ""); // Deixa apenas letras e números
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                .replace(/[^A-Z0-9]/g, ""); 
         }
 
-        // NOVO: FUZZY MATCH (BUSCA INTELIGENTE DE DEPARTAMENTOS)
         function getMetaKey(requestedCat) {
             if (requestedCat === 'TT') return 'TT';
             const stdCat = standardizeString(requestedCat);
             
-            // Procura em todos os meses disponíveis para garantir que encontra a chave, mesmo que o mês 01 esteja vazio
             for (let m of mesesOrdenados) {
                 if (metasDinamicas[m]) {
-                    // 1. Tenta correspondência exata
                     if (metasDinamicas[m][stdCat]) return stdCat;
-                    
-                    // 2. Tenta correspondência parcial (Fuzzy Match)
                     const possibleKeys = Object.keys(metasDinamicas[m]).filter(k => k !== 'TT');
                     const matchedKey = possibleKeys.find(k => k.includes(stdCat) || stdCat.includes(k));
                     if (matchedKey) return matchedKey;
                 }
             }
             
-            return stdCat; // Retorno padrão
+            return stdCat; 
         }
 
         function processRowData(row) {
@@ -903,9 +938,6 @@
             };
         }
 
-        // ==========================================
-        // PROTEÇÃO TOTAL CONTRA MISTURA DE ARQUIVOS
-        // ==========================================
         async function syncFromGoogleDriveScript() {
             if (!GOOGLE_APPS_SCRIPT_URL) {
                 customAlert("O link do Apps Script não foi configurado."); return;
@@ -929,30 +961,66 @@
 
                 data.forEach(fileData => {
                     let upperName = fileData.name.toUpperCase();
-                    
-                    // Bloqueio rigoroso: se tiver META, FINANC, POSITIV no nome, JAMAIS será Vendas
                     let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
-                    let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
                     
-                    if (upperName.includes('FINANC')) type = 'financeiro';
-                    else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
-
-                    Papa.parse(fileData.content, {
-                        header: type === 'vendas',
-                        skipEmptyLines: true,
-                        dynamicTyping: false,
-                        complete: function(results) {
-                            if (type !== 'vendas') processMetaFile(results.data, type);
-                            else globalData = globalData.concat(results.data.map(processRowData));
+                    // Condição Nova: Receber e ler o arquivo do tipo EXCEL processado e enviado pelo novo script
+                    if (fileData.type === 'excel' || upperName.endsWith('.XLSX') || upperName.endsWith('.XLS')) {
+                        try {
+                            const binaryString = window.atob(fileData.content);
+                            const len = binaryString.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
                             
-                            filesProcessed++;
-                            if (filesProcessed === data.length) finalizeDataLoading();
-                        },
-                        error: function(err) {
-                            filesProcessed++;
-                            if (filesProcessed === data.length) finalizeDataLoading();
+                            const workbook = XLSX.read(bytes.buffer, {type: 'array'});
+                            
+                            workbook.SheetNames.forEach(sheetName => {
+                                const worksheet = workbook.Sheets[sheetName];
+                                const upperSheetName = sheetName.toUpperCase();
+                                
+                                let currentType = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
+                                
+                                if (upperSheetName.includes('FINANC')) currentType = 'financeiro';
+                                else if (upperSheetName.includes('POSITIVA') || upperSheetName.includes('COBERTURA')) currentType = 'positivacao';
+
+                                if (currentType !== 'vendas') {
+                                    const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
+                                    processMetaFile(jsonMatrix, currentType);
+                                } else {
+                                    const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                }
+                            });
+                        } catch(ex) {
+                            console.error("Erro a ler Excel do Google Drive:", ex);
                         }
-                    });
+                        filesProcessed++;
+                        if (filesProcessed === data.length) finalizeDataLoading();
+                        
+                    } else {
+                        // Leitura tradicional de CSV do Script
+                        let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
+                        if (upperName.includes('FINANC')) type = 'financeiro';
+                        else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
+
+                        Papa.parse(fileData.content, {
+                            header: type === 'vendas',
+                            skipEmptyLines: true,
+                            dynamicTyping: false,
+                            complete: function(results) {
+                                if (type !== 'vendas') processMetaFile(results.data, type);
+                                else globalData = globalData.concat(results.data.map(processRowData));
+                                
+                                filesProcessed++;
+                                if (filesProcessed === data.length) finalizeDataLoading();
+                            },
+                            error: function(err) {
+                                filesProcessed++;
+                                if (filesProcessed === data.length) finalizeDataLoading();
+                            }
+                        });
+                    }
                 });
 
             } catch (error) {
@@ -983,7 +1051,6 @@
                 const file = allowedFiles[i];
                 let upperName = file.name.toUpperCase();
                 
-                // Bloqueio rigoroso (Se o nome do arquivo for "META ANUAL", NUNCA será carregado como venda!)
                 let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
 
                 if (file.name.toLowerCase().endsWith('.csv')) {
@@ -1045,9 +1112,6 @@
             }
         });
 
-        // ==========================================
-        // PROCESSADOR DE METAS (AGORA 100% BLINDADO CONTRA A COLUNA 'CODEPTO')
-        // ==========================================
         function processMetaFile(rows, type) {
             if (!Array.isArray(rows) || rows.length === 0) return;
             let rawData = rows;
@@ -1056,7 +1120,6 @@
                 rawData = [keys].concat(rawData.map(row => Object.values(row)));
             }
 
-            // Identificação de conteúdo super inteligente para planilhas Meta sem nome na aba
             let detectedType = type;
             if (detectedType === 'meta_desconhecida') {
                 for (let i = 0; i < Math.min(rawData.length, 150); i++) {
@@ -1075,14 +1138,11 @@
 
             let headerRowIndex = -1;
             
-            // Aqui isolamos rigorosamente para encontrar a palavra exata 'DEPARTAMENTO'
-            // Ocultamos qualquer falso positivo com a coluna 'CODEPTO'
             for (let i = 0; i < Math.min(rawData.length, 150); i++) {
                 if (Array.isArray(rawData[i])) {
                     const hasDept = rawData[i].some(cell => {
                         if (typeof cell !== 'string') return false;
                         let c = cell.toUpperCase().trim();
-                        // Procura a exata palavra Departamento para definir a linha!
                         return c === 'DEPARTAMENTO' || c === 'DEPT' || c.includes('DEPARTAMENTO');
                     });
                     if (hasDept) {
@@ -1096,13 +1156,10 @@
 
             const headers = rawData[headerRowIndex].map(h => typeof h === 'string' ? h.toUpperCase().trim() : String(h).toUpperCase().trim());
             
-            // Aqui garantimos que ele puxa a coluna CERTA (A coluna que diz 'DEPARTAMENTO')
-            // Ignorando completamente a coluna 'CODEPTO' que antes causava o bug.
             const deptIdx = headers.findIndex(h => h === 'DEPARTAMENTO' || h.includes('DEPARTAMENTO'));
             
-            if (deptIdx === -1) return; // Segurança extra
+            if (deptIdx === -1) return; 
 
-            // Vinculação de colunas rigorosa (starts with para evitar acentos incorretos)
             const monthCols = {
                 '01': headers.findIndex(h => h === 'JANEIRO' || h === 'JAN' || h.startsWith('JAN')),
                 '02': headers.findIndex(h => h === 'FEVEREIRO' || h === 'FEV' || h.startsWith('FEV')),
@@ -1123,14 +1180,13 @@
                 if (!Array.isArray(row) || row.length <= deptIdx) continue;
                 
                 let dept = row[deptIdx];
-                if (dept === undefined || dept === null) continue; // Ignora celulas completamente nulas
+                if (dept === undefined || dept === null) continue; 
                 
                 let rawDept = String(dept).toUpperCase().trim();
                 
                 if (rawDept.includes('LEITURA') || rawDept.includes('CATEGORIA') || rawDept === '') continue;
 
                 let internalKey;
-                // Exclusividade para carregar perfeitamente a linha TOTAL do Excel sem falsas somas
                 if (rawDept === 'TOTAL' || rawDept === 'TOTAL GERAL' || rawDept.startsWith('TOTAL GERAL')) {
                     internalKey = 'TT';
                 } else {
@@ -1170,9 +1226,6 @@
                 return;
             }
 
-            // O nosso sistema tenta puxar a linha oficial 'TOTAL GERAL'.
-            // MAS, se ela estiver a ZERO no seu ficheiro (exemplo no Financeiro a partir de fev), 
-            // ele recalcula dinamicamente a soma dos departamentos desse mês para evitar que a meta caia para 0.
             for (let m in metasDinamicas) {
                 if (!metasDinamicas[m]['TT']) {
                     metasDinamicas[m]['TT'] = { sellout: 0, cobertura: 0 };
@@ -1186,7 +1239,6 @@
                     }
                 }
 
-                // Super proteção caso o totalizador oficial venha a R$0,00 no Excel
                 if (metasDinamicas[m]['TT'].sellout === 0 && sumSellout > 0) metasDinamicas[m]['TT'].sellout = sumSellout;
                 if (metasDinamicas[m]['TT'].cobertura === 0 && sumCobertura > 0) metasDinamicas[m]['TT'].cobertura = sumCobertura;
             }
@@ -1759,7 +1811,7 @@
 
                     doc.setFontSize(10);
                     doc.setTextColor(100, 100, 100);
-                    doc.text('Acompanhamento Condor', doc.internal.pageSize.width - 14, 20, { align: 'right' });
+                    doc.text('Acompanhamento GSA', doc.internal.pageSize.width - 14, 20, { align: 'right' });
                     
                     doc.setFontSize(9);
                     doc.text(`Gerado em: ${dataAtual}`, doc.internal.pageSize.width - 14, 26, { align: 'right' });
