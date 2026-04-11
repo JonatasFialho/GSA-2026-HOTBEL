@@ -595,11 +595,12 @@
                             <table class="table table-hover table-custom" id="analytical-table">
                                 <thead>
                                     <tr>
-                                        <th onclick="sortTable(0)">Supervisor <i class="fas fa-sort ms-1"></i></th>
-                                        <th onclick="sortTable(1)">Vendedor <i class="fas fa-sort ms-1"></i></th>
-                                        <th onclick="sortTable(2)" class="text-end">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
-                                        <th onclick="sortTable(3)" class="text-end">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
-                                        <th onclick="sortTable(4)" class="text-end">Ticket Médio (R$) <i class="fas fa-sort ms-1"></i></th>
+                                        <th class="ps-4">Posição</th>
+                                        <th style="cursor: pointer;" onclick="sortTable(0)">Supervisor <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortTable(1)">Vendedor <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortTable(2)" class="text-end">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortTable(3)" class="text-end">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortTable(4)" class="text-end">Ticket Médio (R$) <i class="fas fa-sort ms-1"></i></th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-body"></tbody>
@@ -1536,7 +1537,7 @@
             });
 
             const labelsMeses = mesesOrdenados.map(m => nomeMeses[m]);
-            const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+            const commonOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } };
 
             const deptMaxes = departamentosUnicos.map(dept => Math.max(...mesesOrdenados.map(m => evoMensal[m][dept] || 0)));
             const sortedMaxes = [...deptMaxes].sort((a,b) => b - a);
@@ -1562,7 +1563,7 @@
             let evolucaoOptions = { 
                 responsive: true, maintainAspectRatio: false, 
                 plugins: { 
-                    legend: { position: 'bottom' },
+                    legend: { position: 'top' },
                     tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + formatCurrency(context.raw); } } }
                 }
             };
@@ -1707,6 +1708,7 @@
                 return evoMensal[m][metaCatVisaoGeral] || 0;
             });
             const metaMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].sellout : 0);
+            const metaCobMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].cobertura : 0);
 
             createOrUpdateChart('chartEvolucaoMeta', 'bar', {
                 labels: labelsMeses,
@@ -1714,7 +1716,7 @@
                     { label: 'Meta 2026 (R$)', type: 'line', data: metaMensalArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false },
                     { label: 'Realizado (R$)', data: realMensalArr, backgroundColor: coresPadrao.DEFAULT, borderRadius: 4 }
                 ]
-            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, datalabels: { display: false } } });
+            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, datalabels: { display: false } } });
 
             const vendSorted = Object.entries(vendData).sort((a,b) => b[1] - a[1]).slice(0, 10);
             createOrUpdateChart('chartVendedores', 'bar', {
@@ -1745,7 +1747,13 @@
                 } 
             });
 
-            createOrUpdateChart('chartPositivacao', 'line', { labels: labelsMeses, datasets: [{ label: 'Qtd Clientes', data: mesesOrdenados.map(m => evoMensal[m].clientes.size), borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.2)', fill: true, tension: 0.4 }] }, commonOptions);
+            createOrUpdateChart('chartPositivacao', 'bar', {
+                labels: labelsMeses,
+                datasets: [
+                    { label: 'Meta 2026 (Cli)', type: 'line', data: metaCobMensalArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false },
+                    { label: 'Realizado (Cli)', data: mesesOrdenados.map(m => evoMensal[m].clientes.size), backgroundColor: '#f39c12', borderRadius: 4 }
+                ]
+            }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, datalabels: { display: false } } });
             
             const maxSkus = Math.max(0, ...departamentosUnicos.map(d => deptData[d].skus.size));
             let mixStepSize = 1;
@@ -1816,16 +1824,22 @@
 
         function buildTableHTML() {
             const tbody = document.getElementById('table-body'); tbody.innerHTML = '';
-            tableData.forEach(row => {
+            tableData.forEach((row, index) => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${row.sup}</td><td>${row.vend}</td><td class="text-end">${formatNumber(row.clientes)}</td><td class="text-end fw-bold text-primary">${formatCurrency(row.sellout)}</td><td class="text-end">${formatCurrency(row.ticket)}</td>`;
+                
+                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`;
+                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; 
+                else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; 
+                else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`;
+                
+                tr.innerHTML = `<td class="ps-4 align-middle">${posBadge}</td><td class="align-middle">${row.sup}</td><td class="align-middle">${row.vend}</td><td class="text-end align-middle">${formatNumber(row.clientes)}</td><td class="text-end fw-bold text-primary align-middle">${formatCurrency(row.sellout)}</td><td class="text-end align-middle">${formatCurrency(row.ticket)}</td>`;
                 tbody.appendChild(tr);
             });
         }
 
         let sortDirections = [1, 1, 1, 1, 1];
         function sortTable(columnIndex) {
-            const keys = ['sup', 'vend', 'clientes', 'sellout', 'ticket'], key = keys[columnIndex], dir = sortDirections[columnIndex];
+            const keys = ['sup', 'cid', 'clientes', 'sellout', 'ticket'], key = keys[columnIndex], dir = sortDirections[columnIndex];
             tableData.sort((a, b) => typeof a[key] === 'string' ? dir * a[key].localeCompare(b[key]) : dir * (a[key] - b[key]));
             sortDirections[columnIndex] *= -1; buildTableHTML();
         }
