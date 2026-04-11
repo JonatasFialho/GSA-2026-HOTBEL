@@ -746,12 +746,15 @@
                 const ctx = chart.ctx;
                 const dataset = chart.data.datasets[0];
                 const meta = chart.getDatasetMeta(0);
-                const total = dataset.data.reduce((a, b) => a + b, 0);
+                
+                // Utiliza os dados reais caso existam (para as fatias infladas visualmente)
+                const realDataArr = dataset.realData || dataset.data;
+                const total = realDataArr.reduce((a, b) => a + b, 0);
 
                 ctx.save();
                 meta.data.forEach((element, index) => {
-                    const value = dataset.data[index];
-                    const perc = (value / total) * 100;
+                    const realValue = realDataArr[index];
+                    const perc = total > 0 ? (realValue / total) * 100 : 0;
                     if (perc > 0 && perc < 10) {
                         const midAngle = element.startAngle + (element.endAngle - element.startAngle) / 2;
                         const outerRadius = element.outerRadius;
@@ -799,6 +802,11 @@
                 if (chart.config.type !== 'doughnut' && chart.options.plugins && chart.options.plugins.datalabels) {
                     chart.options.plugins.datalabels.color = textColor;
                 }
+                if (chart.config.type === 'doughnut' && chart.data.datasets[0]) {
+                    if (theme === 'dark') chart.data.datasets[0].borderColor = '#27293d';
+                    else if (theme === 'light-red-cards') chart.data.datasets[0].borderColor = '#fff0f0';
+                    else chart.data.datasets[0].borderColor = '#ffffff';
+                }
                 chart.update();
             });
         }
@@ -818,6 +826,66 @@
             if(index !== undefined && index >= 0) return dynPalette[index % dynPalette.length];
             return '#636e72';
         }
+
+        // ==========================================================================================
+        // 🚨🚨🚨 CÓDIGO DO GOOGLE APPS SCRIPT (COPIE E SUBSTITUA O SEU) 🚨🚨🚨
+        // ==========================================================================================
+        /*
+          Substitua o código no seu Google Apps Script pela versão abaixo. 
+          A grande diferença é que agora adicionei "ISO-8859-1" para que os acentos (ã, é, ç) 
+          das planilhas não se transformem no símbolo  (losango de erro)!
+
+          function doGet(e) {
+            var folderId = '1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI';
+            var folder = DriveApp.getFolderById(folderId);
+            var files = folder.getFiles(); 
+            var fileContents = [];
+
+            while (files.hasNext()) {
+              var file = files.next();
+              var mime = file.getMimeType();
+              var name = file.getName();
+
+              // 1. LER ARQUIVOS CSV (Com codificação ISO-8859-1 para evitar símbolos )
+              if (mime === MimeType.CSV || name.toLowerCase().indexOf('.csv') > -1) {
+                fileContents.push({
+                  name: name,
+                  type: 'csv',
+                  content: file.getBlob().getDataAsString("ISO-8859-1")
+                });
+              }
+              // 2. LER ARQUIVOS EXCEL (.xlsx, .xls)
+              else if (mime === MimeType.MICROSOFT_EXCEL || mime === MimeType.MICROSOFT_EXCEL_LEGACY || name.toLowerCase().indexOf('.xlsx') > -1 || name.toLowerCase().indexOf('.xls') > -1) {
+                fileContents.push({
+                  name: name,
+                  type: 'excel',
+                  content: Utilities.base64Encode(file.getBlob().getBytes())
+                });
+              }
+              // 3. LER PLANILHAS NATIVAS DO GOOGLE SHEETS
+              else if (mime === MimeType.GOOGLE_SHEETS) {
+                 var url = "https://docs.google.com/spreadsheets/d/" + file.getId() + "/export?format=xlsx";
+                 var options = { 
+                   headers: { "Authorization": "Bearer " + ScriptApp.getOAuthToken() },
+                   muteHttpExceptions: true
+                 };
+                 var response = UrlFetchApp.fetch(url, options);
+                 
+                 if (response.getResponseCode() === 200) {
+                   fileContents.push({
+                     name: name + ".xlsx",
+                     type: 'excel',
+                     content: Utilities.base64Encode(response.getBlob().getBytes())
+                   });
+                 }
+              }
+            }
+
+            return ContentService.createTextOutput(JSON.stringify(fileContents))
+              .setMimeType(ContentService.MimeType.JSON);
+          }
+        */
+        // ==========================================================================================
 
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpiWiHGAkidy4APu4Bm9B1wNFXXsmOTw8IrZ87E8QDPAYZ5dFIXr7nEI_yEADO2-Tn/exec'; 
 
@@ -888,11 +956,12 @@
             let deptRaw = String(normRow['DEPARTAMENTO'] || normRow['DEPT'] || normRow['GRUPO'] || normRow['MARCA'] || '').toUpperCase().trim();
             if (deptRaw === '' || deptRaw === 'UNDEFINED' || deptRaw === 'NULL') deptRaw = 'OUTROS';
 
-            let codCli = normRow['CODCLI'] || normRow['CLIENTE'] || normRow['CNPJ'] || normRow['COD_CLIENTE'] || '';
-            let supervisor = normRow['SUPERVISOR'] || normRow['COORDENADOR'] || normRow['GERENTE'] || 'N/I';
-            let vendedor = normRow['VENDEDOR'] || normRow['RCA'] || normRow['REP'] || 'N/I';
-            let cidade = normRow['CIDADE'] || normRow['MUNICIPIO'] || normRow['PRACA'] || 'N/I';
-            let prod = normRow['DESCRICAO'] || normRow['PRODUTO'] || normRow['NOME_PRODUTO'] || normRow['CODPROD'] || normRow['SKU'] || 'Produto Não Identificado';
+            // NOVO: Adicionada limpeza extra (.replace(/\uFFFD/g, '')) que remove o losango  das strings caso algo corra mal
+            let codCli = String(normRow['CODCLI'] || normRow['CLIENTE'] || normRow['CNPJ'] || normRow['COD_CLIENTE'] || '').replace(/\uFFFD/g, '').trim();
+            let supervisor = String(normRow['SUPERVISOR'] || normRow['COORDENADOR'] || normRow['GERENTE'] || 'N/I').replace(/\uFFFD/g, '').trim();
+            let vendedor = String(normRow['VENDEDOR'] || normRow['RCA'] || normRow['REP'] || 'N/I').replace(/\uFFFD/g, '').trim();
+            let cidade = String(normRow['CIDADE'] || normRow['MUNICIPIO'] || normRow['PRACA'] || 'N/I').replace(/\uFFFD/g, '').trim();
+            let prod = String(normRow['DESCRICAO'] || normRow['PRODUTO'] || normRow['NOME_PRODUTO'] || normRow['CODPROD'] || normRow['SKU'] || 'Produto Não Identificado').replace(/\uFFFD/g, '').trim();
 
             return { 
                 VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
@@ -1023,6 +1092,7 @@
                         header: type === 'vendas', 
                         skipEmptyLines: true, 
                         dynamicTyping: false,
+                        encoding: "ISO-8859-1", // NOVO: Força a leitura do ISO-8859-1 em CSVs locais para evitar 
                         complete: function(results) {
                             if (type !== 'vendas') processMetaFile(results.data, type);
                             else globalData = globalData.concat(results.data.map(processRowData));
@@ -1282,7 +1352,6 @@
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
         }
 
-        // NOVO: Função para limpar todos os filtros com 1 clique
         function clearAllFilters() {
             document.getElementById('filter-mes').value = '';
             
@@ -1311,7 +1380,6 @@
             
             let hasAnyFilter = false;
             
-            // Adiciona destaque visual no filtro de mês
             const mesEl = document.getElementById('filter-mes');
             if (mes !== "") {
                 mesEl.classList.add('has-filter');
@@ -1320,7 +1388,6 @@
                 mesEl.classList.remove('has-filter');
             }
 
-            // Adiciona destaque visual nos filtros customizados
             const checkCustomFilter = (id, arr) => {
                 const el = document.querySelector(`#${id} .select-btn`);
                 if (el) {
@@ -1338,7 +1405,6 @@
             checkCustomFilter('filter-departamento', depts);
             checkCustomFilter('filter-cidade', cids);
 
-            // Mostra ou esconde o botão de Limpar Filtros
             const btnClear = document.getElementById('btn-clear-filters');
             if(btnClear) {
                 if(hasAnyFilter) btnClear.classList.remove('d-none');
@@ -1555,13 +1621,23 @@
                 datasets: datasetsEvolucao
             }, evolucaoOptions);
 
-            const totalPizza = departamentosUnicos.reduce((sum, d) => sum + deptData[d].sellout, 0);
+            const realPizzaData = departamentosUnicos.map(d => deptData[d].sellout);
+            const totalPizza = realPizzaData.reduce((sum, val) => sum + val, 0);
+
+            const visualPizzaData = realPizzaData.map(val => {
+                if (val === 0 || totalPizza === 0) return 0;
+                const perc = val / totalPizza;
+                return perc < 0.04 ? totalPizza * 0.04 : val; 
+            });
+
             createOrUpdateChart('chartPizzaDept', 'doughnut', {
                 labels: departamentosUnicos,
                 datasets: [{ 
-                    data: departamentosUnicos.map(d => deptData[d].sellout), 
+                    data: visualPizzaData, 
+                    realData: realPizzaData,
                     backgroundColor: departamentosUnicos.map((d, i) => getDeptColor(d, i)), 
-                    borderWidth: 0 
+                    borderWidth: 2,
+                    hoverOffset: 8
                 }]
             }, { 
                 responsive: true, 
@@ -1570,36 +1646,51 @@
                 scales: { x: { display: false }, y: { display: false } }, 
                 plugins: { 
                     legend: { position: 'bottom' }, 
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const realVal = context.dataset.realData[context.dataIndex];
+                                const perc = totalPizza > 0 ? (realVal / totalPizza * 100).toFixed(1) : 0;
+                                return context.label + ': ' + formatCurrency(realVal) + ' (' + perc + '%)';
+                            }
+                        }
+                    },
                     datalabels: { 
                         display: function(context) { 
-                            if (!context.dataset || !context.dataset.data) return false;
-                            return context.dataset.data[context.dataIndex] > 0 ? 'auto' : false; 
+                            const realData = context.dataset.realData || context.dataset.data;
+                            if (!realData) return false;
+                            return realData[context.dataIndex] > 0 ? 'auto' : false; 
                         }, 
                         color: function(context) {
-                            if (!context.dataset || !context.dataset.data) return '#ffffff';
-                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            const realData = context.dataset.realData || context.dataset.data;
+                            if (!realData) return '#ffffff';
+                            const perc = (realData[context.dataIndex] / totalPizza) * 100;
                             if (perc >= 10) return '#ffffff';
                             return document.documentElement.getAttribute('data-theme') === 'dark' ? '#e0e0e0' : '#2d3436';
                         }, 
                         anchor: function(context) {
-                            if (!context.dataset || !context.dataset.data) return 'center';
-                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            const realData = context.dataset.realData || context.dataset.data;
+                            if (!realData) return 'center';
+                            const perc = (realData[context.dataIndex] / totalPizza) * 100;
                             return perc >= 10 ? 'center' : 'end';
                         },
                         align: function(context) {
-                            if (!context.dataset || !context.dataset.data) return 'center';
-                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            const realData = context.dataset.realData || context.dataset.data;
+                            if (!realData) return 'center';
+                            const perc = (realData[context.dataIndex] / totalPizza) * 100;
                             return perc >= 10 ? 'center' : 'end';
                         },
                         offset: function(context) {
-                            if (!context.dataset || !context.dataset.data) return 0;
-                            const perc = (context.dataset.data[context.dataIndex] / totalPizza) * 100;
+                            const realData = context.dataset.realData || context.dataset.data;
+                            if (!realData) return 0;
+                            const perc = (realData[context.dataIndex] / totalPizza) * 100;
                             return perc >= 10 ? 0 : 20; 
                         },
                         font: { weight: 'bold', size: 11 }, 
-                        formatter: function(value) { 
+                        formatter: function(value, context) { 
                             if (totalPizza === 0) return '0%'; 
-                            return (value / totalPizza * 100).toFixed(1) + '%'; 
+                            const realVal = context.dataset.realData ? context.dataset.realData[context.dataIndex] : value;
+                            return (realVal / totalPizza * 100).toFixed(1) + '%'; 
                         } 
                     } 
                 } 
@@ -1656,30 +1747,57 @@
 
             createOrUpdateChart('chartPositivacao', 'line', { labels: labelsMeses, datasets: [{ label: 'Qtd Clientes', data: mesesOrdenados.map(m => evoMensal[m].clientes.size), borderColor: '#f39c12', backgroundColor: 'rgba(243, 156, 18, 0.2)', fill: true, tension: 0.4 }] }, commonOptions);
             
+            const maxSkus = Math.max(0, ...departamentosUnicos.map(d => deptData[d].skus.size));
+            let mixStepSize = 1;
+            if (maxSkus > 500) mixStepSize = 100;
+            else if (maxSkus > 100) mixStepSize = 20;
+            else if (maxSkus > 50) mixStepSize = 10;
+            else if (maxSkus > 20) mixStepSize = 5;
+            else if (maxSkus > 10) mixStepSize = 2;
+            
+            const mixMax = (Math.ceil(maxSkus / mixStepSize) * mixStepSize) + (mixStepSize * 2);
+
             createOrUpdateChart('chartMix', 'bar', { 
                 labels: departamentosUnicos, 
                 datasets: [{ 
-                    label: 'Sell Out', 
-                    data: departamentosUnicos.map(d => deptData[d].sellout), 
+                    label: 'Qtd SKUs', 
+                    data: departamentosUnicos.map(d => deptData[d].skus.size), 
                     backgroundColor: departamentosUnicos.map((d, i) => getDeptColor(d, i)), 
                     borderRadius: 6, maxBarThickness: 55
                 }] 
             }, { 
                 ...commonOptions,
-                layout: { padding: { left: 15, right: 15 } },
-                scales: { x: { offset: true, grid: { display: false } }, y: { beginAtZero: true } },
+                layout: { padding: { left: 15, right: 15, top: 15 } },
+                scales: { 
+                    x: { offset: true, grid: { display: false } }, 
+                    y: { 
+                        beginAtZero: true, 
+                        max: mixMax,
+                        ticks: { stepSize: mixStepSize } 
+                    } 
+                },
                 plugins: { 
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
                                 const index = context.dataIndex;
-                                const skusCount = deptData[departamentosUnicos[index]].skus.size;
-                                return [ `Sell Out: ${formatCurrency(context.raw)}`, `SKUs Distintos: ${skusCount}` ];
+                                const selloutValue = deptData[departamentosUnicos[index]].sellout;
+                                return [ 
+                                    `SKUs Distintos: ${context.raw}`, 
+                                    `Sell Out: ${formatCurrency(selloutValue)}` 
+                                ];
                             }
                         }
                     },
-                    datalabels: { display: false }
+                    datalabels: { 
+                        display: true, 
+                        anchor: 'end',
+                        align: 'end',
+                        color: function() { return document.documentElement.getAttribute('data-theme') === 'dark' ? '#e0e0e0' : '#2d3436'; },
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function(value) { return value; }
+                    }
                 } 
             });
         }
