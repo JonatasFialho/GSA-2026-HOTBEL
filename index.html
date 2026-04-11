@@ -1732,12 +1732,12 @@
                             crossAlign: 'far', autoSkip: false, 
                             callback: function(value) { 
                                 let label = this.getLabelForValue(value) || ''; 
-                                return label.length > 22 ? label.substring(0, 22) + '...' : label; 
+                                return label.length > 50 ? label.substring(0, 50) + '...' : label; 
                             } 
                         } 
                     } 
                 }, 
-                layout: { padding: { left: 5, right: 120 } }, 
+                layout: { padding: { left: 5, right: 130 } }, 
                 plugins: { 
                     legend: { display: false }, 
                     tooltip: { callbacks: { title: function(context) { return context[0].label; } } }, 
