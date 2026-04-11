@@ -693,12 +693,13 @@
                                         <th>Mês</th>
                                         <th class="text-end">Meta 2025</th>
                                         <th class="text-end">Meta 2026</th>
+                                        <th class="text-end">Realizado</th>
                                         <th class="text-end">Variação (Absoluta)</th>
                                         <th class="text-center">Variação (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-comparativo-body">
-                                    <tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-upload fa-2x mb-2 d-block"></i>Carregue as planilhas via Script ou Upload Local para visualizar o comparativo (Ex: METAS CATEGORIAS).</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-upload fa-2x mb-2 d-block"></i>Carregue as planilhas via Script ou Upload Local para visualizar o comparativo (Ex: METAS CATEGORIAS).</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1020,6 +1021,8 @@
             let deptRaw = String(normRow['DEPARTAMENTO'] || normRow['DEPT'] || normRow['GRUPO'] || normRow['MARCA'] || '').toUpperCase().trim();
             if (deptRaw === '' || deptRaw === 'UNDEFINED' || deptRaw === 'NULL') deptRaw = 'OUTROS';
 
+            let secaoRaw = String(normRow['SEÇÃO'] || normRow['SECAO'] || '').toUpperCase().trim();
+
             let codCli = String(normRow['CODCLI'] || normRow['CLIENTE'] || normRow['CNPJ'] || normRow['COD_CLIENTE'] || '').replace(/\uFFFD/g, '').trim();
             let supervisor = String(normRow['SUPERVISOR'] || normRow['COORDENADOR'] || normRow['GERENTE'] || 'N/I').replace(/\uFFFD/g, '').trim();
             let vendedor = String(normRow['VENDEDOR'] || normRow['RCA'] || normRow['REP'] || 'N/I').replace(/\uFFFD/g, '').trim();
@@ -1029,7 +1032,8 @@
             return { 
                 VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
                 DEPT_NORM: deptRaw, CODCLI: codCli, SUPERVISOR: supervisor,
-                VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod
+                VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod,
+                SECAO_NORM: secaoRaw
             };
         }
 
@@ -2308,11 +2312,50 @@
             const data2025 = dados.map(d => d.m2025);
             const data2026 = dados.map(d => d.m2026);
 
+            const dataRealizado = [];
+            const monthMap = { 'JANEIRO':'01', 'FEVEREIRO':'02', 'MARÇO':'03', 'MARCO':'03', 'ABRIL':'04', 'MAIO':'05', 'JUNHO':'06', 'JULHO':'07', 'AGOSTO':'08', 'SETEMBRO':'09', 'OUTUBRO':'10', 'NOVEMBRO':'11', 'DEZEMBRO':'12' };
+
+            dados.forEach(d => {
+                let mNum = monthMap[d.mes];
+                let realizadoVal = 0;
+                let clisSet = new Set();
+                let depUpper = departamento.toUpperCase().trim();
+
+                globalData.forEach(row => {
+                    if (row.MES_EXTRATO !== mNum) return;
+
+                    let match = false;
+                    if (depUpper === 'TOTAL GERAL') {
+                        match = true;
+                    } else if (depUpper.startsWith('GSA - MAC')) {
+                        if (row.SECAO_NORM && row.SECAO_NORM.startsWith('GSA - MAC')) match = true;
+                    } else if (depUpper.startsWith('GSA - REFRESKANT')) {
+                        if (row.SECAO_NORM && row.SECAO_NORM.startsWith('GSA - REFRESKANT')) match = true;
+                    } else if (depUpper === 'P1-GSA - DONA RAIZ') {
+                        if (row.DEPT_NORM === 'P1-GSA - DONA RAIZ') match = true;
+                    } else if (depUpper === 'P1-GSA - VELLY/PPA') {
+                        if (row.DEPT_NORM === 'P1-GSA - VELLY/PPA') match = true;
+                    } else {
+                        if (row.DEPT_NORM === depUpper) match = true;
+                    }
+
+                    if (match) {
+                        if (secao === 'Financeiro') realizadoVal += row.VLFAT_NUM;
+                        else if (secao === 'Caixa') realizadoVal += row.QTD_NUM;
+                        else if (secao === 'Cobertura' && row.CODCLI) clisSet.add(row.CODCLI);
+                    }
+                });
+
+                if (secao === 'Cobertura') realizadoVal = clisSet.size;
+                dataRealizado.push(realizadoVal);
+            });
+
             createOrUpdateChart('chartComparativo', 'bar', {
                 labels: labels,
                 datasets: [
                     { label: 'Meta 2025', data: data2025, backgroundColor: '#5a6268', borderRadius: 4 },
-                    { label: 'Meta 2026', data: data2026, backgroundColor: '#00006b', borderRadius: 4 }
+                    { label: 'Meta 2026', data: data2026, backgroundColor: '#00006b', borderRadius: 4 },
+                    { label: 'Realizado', data: dataRealizado, backgroundColor: '#2ecc71', borderRadius: 4 }
                 ]
             }, {
                 responsive: true,
@@ -2350,11 +2393,14 @@
             });
 
             tbody.innerHTML = '';
-            let tot2025 = 0, tot2026 = 0;
+            let tot2025 = 0, tot2026 = 0, totRealizado = 0;
 
-            dados.forEach(d => {
+            dados.forEach((d, index) => {
                 tot2025 += d.m2025;
                 tot2026 += d.m2026;
+                
+                let realVal = dataRealizado[index];
+                totRealizado += realVal;
                 
                 let diff = d.m2026 - d.m2025;
                 let perc = d.m2025 > 0 ? (diff / d.m2025) * 100 : (diff > 0 ? 100 : 0);
@@ -2365,6 +2411,7 @@
 
                 let val25 = secao === 'Financeiro' ? formatCurrency(d.m2025) : formatNumber(d.m2025);
                 let val26 = secao === 'Financeiro' ? formatCurrency(d.m2026) : formatNumber(d.m2026);
+                let valReal = secao === 'Financeiro' ? formatCurrency(realVal) : formatNumber(realVal);
                 let valDiff = secao === 'Financeiro' ? formatCurrency(diff) : formatNumber(diff);
 
                 tbody.innerHTML += `
@@ -2372,6 +2419,7 @@
                         <td class="fw-bold">${d.mes}</td>
                         <td class="text-end">${val25}</td>
                         <td class="text-end fw-bold text-dark">${val26}</td>
+                        <td class="text-end fw-bold text-success">${valReal}</td>
                         <td class="text-end ${diff >= 0 ? 'text-success' : 'text-danger'} fw-bold">${signal}${valDiff}</td>
                         <td class="text-center"><span class="badge bg-${badgeClass}"><i class="fas ${icon}"></i> ${signal}${perc.toFixed(1)}%</span></td>
                     </tr>
@@ -2386,6 +2434,7 @@
 
             let t25 = secao === 'Financeiro' ? formatCurrency(tot2025) : formatNumber(tot2025);
             let t26 = secao === 'Financeiro' ? formatCurrency(tot2026) : formatNumber(tot2026);
+            let tReal = secao === 'Financeiro' ? formatCurrency(totRealizado) : formatNumber(totRealizado);
             let tDiff = secao === 'Financeiro' ? formatCurrency(totDiff) : formatNumber(totDiff);
 
             tbody.innerHTML += `
@@ -2393,6 +2442,7 @@
                     <td>TOTAL GERAL</td>
                     <td class="text-end">${t25}</td>
                     <td class="text-end text-primary">${t26}</td>
+                    <td class="text-end text-success">${tReal}</td>
                     <td class="text-end ${totDiff >= 0 ? 'text-success' : 'text-danger'}">${totSignal}${tDiff}</td>
                     <td class="text-center"><span class="badge bg-${totBadgeClass}"><i class="fas ${totIcon}"></i> ${totSignal}${totPerc.toFixed(1)}%</span></td>
                 </tr>
