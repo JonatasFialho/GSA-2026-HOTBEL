@@ -694,12 +694,13 @@
                                         <th class="text-end">Meta 2025</th>
                                         <th class="text-end">Meta 2026</th>
                                         <th class="text-end">Realizado</th>
-                                        <th class="text-end">Variação (Absoluta)</th>
+                                        <th class="text-center">% Real. vs Meta</th>
+                                        <th class="text-end">Variação (Meta)</th>
                                         <th class="text-center">Variação (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="table-comparativo-body">
-                                    <tr><td colspan="6" class="text-center text-muted py-4"><i class="fas fa-upload fa-2x mb-2 d-block"></i>Carregue as planilhas via Script ou Upload Local para visualizar o comparativo (Ex: METAS CATEGORIAS).</td></tr>
+                                    <tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-upload fa-2x mb-2 d-block"></i>Carregue as planilhas via Script ou Upload Local para visualizar o comparativo (Ex: METAS CATEGORIAS).</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2301,7 +2302,7 @@
             if (!dados || dados.length === 0) {
                 document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${departamento})`;
                 createOrUpdateChart('chartComparativo', 'bar', {labels: [], datasets: []}, {responsive: true, maintainAspectRatio: false});
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Nenhum dado encontrado para o departamento selecionado nesta seção.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Nenhum dado encontrado para o departamento selecionado nesta seção.</td></tr>`;
                 return;
             }
 
@@ -2409,6 +2410,10 @@
                 let icon = perc > 0 ? 'fa-arrow-trend-up' : (perc < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
                 let signal = perc > 0 ? '+' : '';
 
+                let percReal = d.m2026 > 0 ? (realVal / d.m2026) * 100 : (realVal > 0 ? 100 : 0);
+                let badgeRealClass = percReal >= 100 ? 'success' : (percReal >= 90 ? 'warning text-dark' : 'danger');
+                let badgeReal = (d.m2026 === 0 && realVal === 0) ? '<span class="text-muted">-</span>' : `<span class="badge bg-${badgeRealClass}">${percReal.toFixed(1)}%</span>`;
+
                 let val25 = secao === 'Financeiro' ? formatCurrency(d.m2025) : formatNumber(d.m2025);
                 let val26 = secao === 'Financeiro' ? formatCurrency(d.m2026) : formatNumber(d.m2026);
                 let valReal = secao === 'Financeiro' ? formatCurrency(realVal) : formatNumber(realVal);
@@ -2420,6 +2425,7 @@
                         <td class="text-end">${val25}</td>
                         <td class="text-end text-dark">${val26}</td>
                         <td class="text-end text-success">${valReal}</td>
+                        <td class="text-center">${badgeReal}</td>
                         <td class="text-end ${diff >= 0 ? 'text-success' : 'text-danger'}">${signal}${valDiff}</td>
                         <td class="text-center"><span class="badge bg-${badgeClass}"><i class="fas ${icon}"></i> ${signal}${perc.toFixed(1)}%</span></td>
                     </tr>
@@ -2432,6 +2438,10 @@
             let totIcon = totPerc > 0 ? 'fa-arrow-trend-up' : (totPerc < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
             let totSignal = totPerc > 0 ? '+' : '';
 
+            let totPercReal = tot2026 > 0 ? (totRealizado / tot2026) * 100 : (totRealizado > 0 ? 100 : 0);
+            let totBadgeRealClass = totPercReal >= 100 ? 'success' : (totPercReal >= 90 ? 'warning text-dark' : 'danger');
+            let totBadgeReal = (tot2026 === 0 && totRealizado === 0) ? '<span class="text-muted">-</span>' : `<span class="badge bg-${totBadgeRealClass}">${totPercReal.toFixed(1)}%</span>`;
+
             let t25 = secao === 'Financeiro' ? formatCurrency(tot2025) : formatNumber(tot2025);
             let t26 = secao === 'Financeiro' ? formatCurrency(tot2026) : formatNumber(tot2026);
             let tReal = secao === 'Financeiro' ? formatCurrency(totRealizado) : formatNumber(totRealizado);
@@ -2443,6 +2453,7 @@
                     <td class="text-end">${t25}</td>
                     <td class="text-end text-primary">${t26}</td>
                     <td class="text-end text-success">${tReal}</td>
+                    <td class="text-center">${totBadgeReal}</td>
                     <td class="text-end ${totDiff >= 0 ? 'text-success' : 'text-danger'}">${totSignal}${tDiff}</td>
                     <td class="text-center"><span class="badge bg-${totBadgeClass}"><i class="fas ${totIcon}"></i> ${totSignal}${totPerc.toFixed(1)}%</span></td>
                 </tr>
