@@ -471,6 +471,10 @@
                             </div>
                             <div class="col">
                                 <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">VENDEDOR</label>
+                                <div id="filter-vendedor"></div>
+                            </div>
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">DEPARTAMENTO</label>
                                 <div id="filter-departamento"></div>
                             </div>
                             <div class="col">
@@ -663,8 +667,8 @@
                                 </select>
                             </div>
                             <div class="d-flex flex-column justify-content-end">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">CATEGORIA</label>
-                                <select class="form-select" id="comp-categoria-select" style="min-width: 180px;">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">DEPARTAMENTO</label>
+                                <select class="form-select" id="comp-departamento-select" style="min-width: 180px;">
                                     <option value="TOTAL GERAL">TOTAL GERAL</option>
                                 </select>
                             </div>
@@ -2257,7 +2261,7 @@
 
             window.comparativoData = data;
             
-            const selectCat = document.getElementById('comp-categoria-select');
+            const selectCat = document.getElementById('comp-departamento-select');
             selectCat.innerHTML = '';
             Array.from(categoriasSet).sort().forEach(cat => {
                 if (cat === 'TOTAL GERAL') return; 
@@ -2277,28 +2281,28 @@
 
         // Listeners para os filtros da aba comparativa
         document.getElementById('comp-section-select').addEventListener('change', renderComparativo);
-        document.getElementById('comp-categoria-select').addEventListener('change', renderComparativo);
+        document.getElementById('comp-departamento-select').addEventListener('change', renderComparativo);
 
         function renderComparativo() {
             if (!window.comparativoData) return;
             
             const secao = document.getElementById('comp-section-select').value;
-            const categoria = document.getElementById('comp-categoria-select').value;
+            const departamento = document.getElementById('comp-departamento-select').value;
             
             const dadosSecao = window.comparativoData[secao] || {};
-            const dados = dadosSecao[categoria];
+            const dados = dadosSecao[departamento];
 
             const tbody = document.getElementById('table-comparativo-body');
 
             if (!dados || dados.length === 0) {
-                document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${categoria})`;
+                document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${departamento})`;
                 createOrUpdateChart('chartComparativo', 'bar', {labels: [], datasets: []}, {responsive: true, maintainAspectRatio: false});
-                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Nenhum dado encontrado para a categoria selecionada nesta seção.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Nenhum dado encontrado para o departamento selecionado nesta seção.</td></tr>`;
                 return;
             }
 
-            document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${categoria})`;
-            document.getElementById('comp-table-title').innerText = `Detalhamento de Variação - ${secao} (${categoria})`;
+            document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${departamento})`;
+            document.getElementById('comp-table-title').innerText = `Detalhamento de Variação - ${secao} (${departamento})`;
             // Preparando Vetores Gráfico
             const labels = dados.map(d => d.mes);
             const data2025 = dados.map(d => d.m2025);
