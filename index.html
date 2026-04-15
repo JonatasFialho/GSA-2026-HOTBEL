@@ -451,7 +451,7 @@
                             <button id="btn-clear-filters" class="btn btn-sm btn-outline-danger shadow-sm d-none" onclick="clearAllFilters()" style="border-radius: 6px; font-weight: 600; padding: 2px 8px; font-size: 0.8rem;">Limpar Filtros</button>
                         </div>
                         <div class="row g-2 row-cols-2 row-cols-sm-3 row-cols-xl-6">
-                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">TIPO VENDA</label><select class="form-select fw-bold text-primary" id="filter-tipo-venda"><option value="">Ambos</option><option value="VENDIDO">Vendido</option><option value="FATURADO">Faturado</option></select></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">TIPO VENDA</label><select class="form-select fw-bold text-primary" id="filter-tipo-venda"><option value="VENDIDO">Vendido</option><option value="FATURADO">Faturado</option></select></div>
                             <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">MÊS</label><select class="form-select" id="filter-mes"><option value="">Todos (Acumulado)</option></select></div>
                             <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">SUPERVISOR</label><div id="filter-supervisor"></div></div>
                             <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">VENDEDOR</label><div id="filter-vendedor"></div></div>
@@ -1344,7 +1344,7 @@
 
         function clearAllFilters() {
             document.getElementById('filter-mes').value = '';
-            document.getElementById('filter-tipo-venda').value = '';
+            document.getElementById('filter-tipo-venda').value = 'VENDIDO';
             
             ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
                 const container = document.getElementById(id);
@@ -1381,12 +1381,8 @@
             }
 
             const tipoEl = document.getElementById('filter-tipo-venda');
-            if (tipoVenda !== "") {
-                tipoEl.classList.add('has-filter');
-                hasAnyFilter = true;
-            } else {
-                tipoEl.classList.remove('has-filter');
-            }
+            tipoEl.classList.add('has-filter');
+            hasAnyFilter = true;
 
             const checkCustomFilter = (id, arr) => {
                 const el = document.querySelector(`#${id} .select-btn`);
