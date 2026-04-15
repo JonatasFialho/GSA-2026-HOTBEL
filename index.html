@@ -438,12 +438,6 @@
                         <i class="fas fa-bullseye me-2"></i> Acompanhamento de Metas
                     </button>
                 </li>
-                <!-- NOVO BOTÃO ISOLADO - Adicionado conforme instrução (Aba de Comparativo) -->
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="comparativo-tab" data-bs-toggle="tab" data-bs-target="#comparativo" type="button" role="tab" aria-controls="comparativo" aria-selected="false">
-                        <i class="fas fa-balance-scale me-2"></i> Comparativo de Metas
-                    </button>
-                </li>
             </ul>
 
             <div class="tab-content" id="myTabContent">
@@ -452,39 +446,20 @@
                 <div class="tab-pane fade show active" id="realizado" role="tabpanel" aria-labelledby="realizado-tab">
                     
                     <div class="filter-section" style="overflow: visible !important;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="m-0 fw-bold text-muted"><i class="fas fa-filter me-1"></i> Filtros de Visão</h6>
-                            <button id="btn-clear-filters" class="btn btn-sm btn-outline-danger shadow-sm d-none" onclick="clearAllFilters()" style="border-radius: 6px; font-weight: 600;">
-                                <i class="fas fa-times-circle me-1"></i> Limpar Filtros
-                            </button>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="m-0 fw-bold text-muted" style="font-size: 0.9rem;"><i class="fas fa-filter me-1"></i> Filtros de Visão</h6>
+                            <button id="btn-clear-filters" class="btn btn-sm btn-outline-danger shadow-sm d-none" onclick="clearAllFilters()" style="border-radius: 6px; font-weight: 600; padding: 2px 8px; font-size: 0.8rem;">Limpar Filtros</button>
                         </div>
-                        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-5">
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">MÊS</label>
-                                <select class="form-select" id="filter-mes">
-                                    <option value="">Todos (Acumulado)</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">SUPERVISOR</label>
-                                <div id="filter-supervisor"></div>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">VENDEDOR</label>
-                                <div id="filter-vendedor"></div>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">DEPARTAMENTO</label>
-                                <div id="filter-departamento"></div>
-                            </div>
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">CIDADE</label>
-                                <div id="filter-cidade"></div>
-                            </div>
+                        <div class="row g-2 row-cols-2 row-cols-sm-3 row-cols-xl-6">
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">TIPO VENDA</label><select class="form-select fw-bold text-primary" id="filter-tipo-venda"><option value="">Ambos</option><option value="VENDIDO">Vendido</option><option value="FATURADO">Faturado</option></select></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">MÊS</label><select class="form-select" id="filter-mes"><option value="">Todos (Acumulado)</option></select></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">SUPERVISOR</label><div id="filter-supervisor"></div></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">VENDEDOR</label><div id="filter-vendedor"></div></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">DEPARTAMENTO</label><div id="filter-departamento"></div></div>
+                            <div class="col"><label class="form-label text-muted fw-bold mb-1" style="font-size: 0.7rem;">CIDADE</label><div id="filter-cidade"></div></div>
                         </div>
                     </div>
 
-                    <!-- Cards KPI -->
                     <div class="row g-3 g-xl-4 mb-4 row-cols-1 row-cols-sm-2 row-cols-xl-4">
                         <div class="col">
                             <div class="card-kpi p-3 position-relative d-flex flex-column">
@@ -652,61 +627,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- NOVA ABA 3: COMPARATIVO DE METAS (ISOLADA) -->
-                <div class="tab-pane fade" id="comparativo" role="tabpanel" aria-labelledby="comparativo-tab">
-                    <div class="filter-section mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3" style="overflow: visible !important;">
-                        <div class="d-flex flex-wrap gap-3">
-                            <div>
-                                <h6 class="fw-bold text-muted mb-3"><i class="fas fa-filter me-1"></i> Filtros de Comparativo</h6>
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">SEÇÃO</label>
-                                <select class="form-select" id="comp-section-select" style="min-width: 180px;">
-                                    <option value="Financeiro">Financeiro (R$)</option>
-                                    <option value="Cobertura">Cobertura (Clientes)</option>
-                                    <option value="Caixa">Caixa (Vol/Qtd)</option>
-                                </select>
-                            </div>
-                            <div class="d-flex flex-column justify-content-end">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">DEPARTAMENTO</label>
-                                <select class="form-select" id="comp-departamento-select" style="min-width: 180px;">
-                                    <option value="TOTAL GERAL">TOTAL GERAL</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mb-4">
-                        <div class="col-12">
-                            <div class="chart-container" style="height: 450px;">
-                                <div class="chart-title" id="comp-chart-title">Comparativo Mensal: 2025 vs 2026</div>
-                                <div class="canvas-wrapper"><canvas id="chartComparativo"></canvas></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table-custom-wrapper">
-                        <div class="chart-title mb-3" id="comp-table-title">Detalhamento de Variação</div>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-striped table-custom table-bordered align-middle">
-                                <thead style="background-color: var(--primary-color); color: white;">
-                                    <tr>
-                                        <th>Mês</th>
-                                        <th class="text-end">Meta 2025</th>
-                                        <th class="text-end">Meta 2026</th>
-                                        <th class="text-end">Realizado</th>
-                                        <th class="text-center">% Real. vs Meta</th>
-                                        <th class="text-end">Variação (Meta)</th>
-                                        <th class="text-center">Variação (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-comparativo-body">
-                                    <tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-upload fa-2x mb-2 d-block"></i>Carregue as planilhas via Script ou Upload Local para visualizar o comparativo (Ex: METAS CATEGORIAS).</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <!-- FIM DA NOVA ABA 3 -->
 
             </div>
         </div>
@@ -880,9 +800,6 @@
         let currentMetaCategory = 'TT'; 
         let metaDeptsList = []; 
         
-        // VARIÁVEL GLOBAL PARA OS DADOS DO COMPARATIVO
-        window.comparativoData = null;
-        
         const dynPalette = ['#0f4c81', '#e74c3c', '#00cec9', '#fd79a8', '#f39c12', '#8e44ad', '#2ecc71', '#d35400', '#2c3e50', '#16a085', '#c0392b', '#2980b9'];
 
         function getDeptColor(deptName, index) {
@@ -994,7 +911,7 @@
             return stdCat; 
         }
 
-        function processRowData(row) {
+        function processRowData(row, fileName = '') {
             const normRow = {};
             for (let key in row) {
                 if (key) normRow[key.toUpperCase().trim()] = row[key];
@@ -1022,19 +939,22 @@
             let deptRaw = String(normRow['DEPARTAMENTO'] || normRow['DEPT'] || normRow['GRUPO'] || normRow['MARCA'] || '').toUpperCase().trim();
             if (deptRaw === '' || deptRaw === 'UNDEFINED' || deptRaw === 'NULL') deptRaw = 'OUTROS';
 
-            let secaoRaw = String(normRow['SEÇÃO'] || normRow['SECAO'] || '').toUpperCase().trim();
-
             let codCli = String(normRow['CODCLI'] || normRow['CLIENTE'] || normRow['CNPJ'] || normRow['COD_CLIENTE'] || '').replace(/\uFFFD/g, '').trim();
             let supervisor = String(normRow['SUPERVISOR'] || normRow['COORDENADOR'] || normRow['GERENTE'] || 'N/I').replace(/\uFFFD/g, '').trim();
             let vendedor = String(normRow['VENDEDOR'] || normRow['RCA'] || normRow['REP'] || 'N/I').replace(/\uFFFD/g, '').trim();
             let cidade = String(normRow['CIDADE'] || normRow['MUNICIPIO'] || normRow['PRACA'] || 'N/I').replace(/\uFFFD/g, '').trim();
             let prod = String(normRow['DESCRICAO'] || normRow['PRODUTO'] || normRow['NOME_PRODUTO'] || normRow['CODPROD'] || normRow['SKU'] || 'Produto Não Identificado').replace(/\uFFFD/g, '').trim();
 
+            let tipoVenda = 'OUTROS';
+            let upName = String(fileName).toUpperCase();
+            if (upName.includes('VENDID')) tipoVenda = 'VENDIDO';
+            else if (upName.includes('FATURAD')) tipoVenda = 'FATURADO';
+
             return { 
                 VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
                 DEPT_NORM: deptRaw, CODCLI: codCli, SUPERVISOR: supervisor,
                 VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod,
-                SECAO_NORM: secaoRaw
+                TIPO_VENDA: tipoVenda
             };
         }
 
@@ -1061,7 +981,7 @@
 
                 data.forEach(fileData => {
                     let upperName = fileData.name.toUpperCase();
-                    let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR') || upperName.includes('CATEGORIA');
+                    let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
                     
                     if (fileData.type === 'excel' || upperName.endsWith('.XLSX') || upperName.endsWith('.XLS')) {
                         try {
@@ -1082,17 +1002,13 @@
                                 
                                 if (upperSheetName.includes('FINANC')) currentType = 'financeiro';
                                 else if (upperSheetName.includes('POSITIVA') || upperSheetName.includes('COBERTURA')) currentType = 'positivacao';
-                                else if (upperName.includes('CATEGORIA') || upperSheetName.includes('CATEGORIA')) currentType = 'comparativo';
 
-                                if (currentType === 'comparativo') {
-                                    const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
-                                    extractComparativo(jsonMatrix, true);
-                                } else if (currentType !== 'vendas') {
+                                if (currentType !== 'vendas') {
                                     const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
                                     processMetaFile(jsonMatrix, currentType);
                                 } else {
                                     const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                    globalData = globalData.concat(jsonObjects.map(row => processRowData(row, fileData.name)));
                                 }
                             });
                         } catch(ex) {
@@ -1105,16 +1021,14 @@
                         let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
                         if (upperName.includes('FINANC')) type = 'financeiro';
                         else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
-                        else if (upperName.includes('CATEGORIA')) type = 'comparativo';
 
                         Papa.parse(fileData.content, {
                             header: type === 'vendas',
                             skipEmptyLines: true,
                             dynamicTyping: false,
                             complete: function(results) {
-                                if (type === 'comparativo') extractComparativo(results.data, true);
-                                else if (type !== 'vendas') processMetaFile(results.data, type);
-                                else globalData = globalData.concat(results.data.map(processRowData));
+                                if (type !== 'vendas') processMetaFile(results.data, type);
+                                else globalData = globalData.concat(results.data.map(row => processRowData(row, fileData.name)));
                                 
                                 filesProcessed++;
                                 if (filesProcessed === data.length) finalizeDataLoading();
@@ -1155,23 +1069,21 @@
                 const file = allowedFiles[i];
                 let upperName = file.name.toUpperCase();
                 
-                let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR') || upperName.includes('CATEGORIA');
+                let isGlobalMetaFile = upperName.includes('META') || upperName.includes('FINANC') || upperName.includes('POSITIV') || upperName.includes('COBERTUR');
 
                 if (file.name.toLowerCase().endsWith('.csv')) {
                     let type = isGlobalMetaFile ? 'meta_desconhecida' : 'vendas';
                     if (upperName.includes('FINANC')) type = 'financeiro';
                     else if (upperName.includes('POSITIV') || upperName.includes('COBERTUR')) type = 'positivacao';
-                    else if (upperName.includes('CATEGORIA')) type = 'comparativo';
 
                     Papa.parse(file, {
                         header: type === 'vendas', 
                         skipEmptyLines: true, 
                         dynamicTyping: false,
-                        encoding: "ISO-8859-1", 
+                        encoding: "ISO-8859-1", // NOVO: Força a leitura do ISO-8859-1 em CSVs locais para evitar 
                         complete: function(results) {
-                            if (type === 'comparativo') extractComparativo(results.data, true);
-                            else if (type !== 'vendas') processMetaFile(results.data, type);
-                            else globalData = globalData.concat(results.data.map(processRowData));
+                            if (type !== 'vendas') processMetaFile(results.data, type);
+                            else globalData = globalData.concat(results.data.map(row => processRowData(row, file.name)));
                             filesProcessed++;
                             if (filesProcessed === allowedFiles.length) finalizeDataLoading();
                         },
@@ -1195,17 +1107,13 @@
                                 
                                 if (upperSheetName.includes('FINANC')) currentType = 'financeiro';
                                 else if (upperSheetName.includes('POSITIVA') || upperSheetName.includes('COBERTURA')) currentType = 'positivacao';
-                                else if (upperName.includes('CATEGORIA') || upperSheetName.includes('CATEGORIA')) currentType = 'comparativo';
 
-                                if (currentType === 'comparativo') {
-                                    const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
-                                    extractComparativo(jsonMatrix, true);
-                                } else if (currentType !== 'vendas') {
+                                if (currentType !== 'vendas') {
                                     const jsonMatrix = XLSX.utils.sheet_to_json(worksheet, {header: 1, defval: ''});
                                     processMetaFile(jsonMatrix, currentType);
                                 } else {
                                     const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                    globalData = globalData.concat(jsonObjects.map(row => processRowData(row, file.name)));
                                 }
                             });
                         } catch(ex) {
@@ -1331,8 +1239,8 @@
         }
 
         function finalizeDataLoading() {
-            if (globalData.length === 0 && !window.comparativoData) {
-                customAlert("Não foi possível processar vendas. Certifique-se de enviar os ficheiros corretos.");
+            if (globalData.length === 0) {
+                customAlert("Não foi possível processar vendas. Certifique-se de enviar os ficheiros de venda junto com as metas.");
                 document.getElementById('loading-overlay').style.display = 'none';
                 return;
             }
@@ -1360,9 +1268,6 @@
             populateMetaButtons();
             filteredData = [...globalData];
             updateDashboard();
-            if (window.comparativoData) {
-                renderComparativo();
-            }
             document.getElementById('loading-overlay').style.display = 'none';
         }
         
@@ -1433,10 +1338,13 @@
             createCustomSelect('filter-cidade', cidades);
 
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
+            const selectTipo = document.getElementById('filter-tipo-venda');
+            selectTipo.removeEventListener('change', applyFilters); selectTipo.addEventListener('change', applyFilters);
         }
 
         function clearAllFilters() {
             document.getElementById('filter-mes').value = '';
+            document.getElementById('filter-tipo-venda').value = '';
             
             ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
                 const container = document.getElementById(id);
@@ -1456,6 +1364,7 @@
 
         function applyFilters() {
             const mes = document.getElementById('filter-mes').value;
+            const tipoVenda = document.getElementById('filter-tipo-venda').value;
             const sups = getCustomSelectValues('filter-supervisor');
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
@@ -1469,6 +1378,14 @@
                 hasAnyFilter = true;
             } else {
                 mesEl.classList.remove('has-filter');
+            }
+
+            const tipoEl = document.getElementById('filter-tipo-venda');
+            if (tipoVenda !== "") {
+                tipoEl.classList.add('has-filter');
+                hasAnyFilter = true;
+            } else {
+                tipoEl.classList.remove('has-filter');
             }
 
             const checkCustomFilter = (id, arr) => {
@@ -1496,6 +1413,7 @@
 
             filteredData = globalData.filter(row => {
                 return (!mes || row.MES_EXTRATO === mes) && 
+                       (!tipoVenda || row.TIPO_VENDA === tipoVenda) &&
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
@@ -2034,7 +1952,7 @@
 
         function renderMetas() {
             const rMes = {}; mesesOrdenados.forEach(m => rMes[m] = { sell: 0, clis: new Set() });
-            globalData.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
+            filteredData.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
             
             let qKey = getMetaKey(currentMetaCategory), lM = mesesOrdenados.map(m => nomeMeses[m]);
             const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0), rSArr = mesesOrdenados.map(m => rMes[m].sell);
@@ -2158,306 +2076,6 @@
                     btn.innerHTML = originalHTML; btn.disabled = false;
                 }
             }, 100);
-        }
-
-        // =========================================================================================
-        // SCRIPT: COMPARATIVO DE METAS (ANOS) - Agora global para sincronização automática
-        // =========================================================================================
-        
-        // Tratamento robusto de números vindos do Excel/CSV PT-BR
-        function parseAndCleanNumComp(val) {
-            if (val === undefined || val === null || String(val).trim() === '') return 0;
-            if (typeof val === 'number') return val;
-            let str = String(val).trim().replace(/R\$\s?/ig, '');
-            if (str.includes(',') && str.includes('.')) {
-                if (str.lastIndexOf(',') > str.lastIndexOf('.')) str = str.replace(/\./g, '').replace(',', '.');
-                else str = str.replace(/,/g, '');
-            } else if (str.includes(',')) {
-                str = str.replace(',', '.');
-            }
-            return parseFloat(str) || 0;
-        }
-
-        function extractComparativo(rows, silent = true) {
-            const data = { 'Financeiro': {}, 'Cobertura': {}, 'Caixa': {} };
-            const mesesValidos = ['JANEIRO','FEVEREIRO','MARÇO','MARCO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
-            const ignorarNomes = ['MÊS', 'MES', 'TOTAL', 'FINANCEIRO', 'COBERTURA', 'CAIXA'];
-            
-            let categoriasSet = new Set(['TOTAL GERAL']);
-            
-            let headerRowIdx = -1;
-            for (let i = 0; i < Math.min(rows.length, 15); i++) {
-                let r = rows[i] || [];
-                let rStr = r.map(c => String(c).toUpperCase().trim());
-                if (rStr.includes('META 2025') || rStr.includes('META 2026')) {
-                    headerRowIdx = i;
-                    break;
-                }
-            }
-
-            let countLinhasValidas = 0;
-
-            if (headerRowIdx !== -1) {
-                let hRow = rows[headerRowIdx].map(c => String(c).toUpperCase().trim());
-                
-                let idx2025 = [];
-                let idx2026 = [];
-                let idxMes = [];
-
-                for (let j = 0; j < hRow.length; j++) {
-                    if (hRow[j].includes('META 2025') || hRow[j].includes('2025')) idx2025.push(j);
-                    if (hRow[j].includes('META 2026') || hRow[j].includes('2026')) idx2026.push(j);
-                    if (hRow[j] === 'MÊS' || hRow[j] === 'MES') idxMes.push(j);
-                }
-
-                if (idx2025.length === 0) idx2025 = [2, 7, 12];
-                if (idx2026.length === 0) idx2026 = [4, 9, 14];
-                if (idxMes.length === 0) idxMes = [Math.max(0, idx2025[0]-1), Math.max(0, idx2025[1] ? idx2025[1]-1 : 6), Math.max(0, idx2025[2] ? idx2025[2]-1 : 11)];
-
-                while(idx2025.length < 3) idx2025.push(idx2025[idx2025.length - 1] + 5);
-                while(idx2026.length < 3) idx2026.push(idx2026[idx2026.length - 1] + 5);
-                while(idxMes.length < 3) idxMes.push(idxMes[idxMes.length - 1] + 5);
-
-                let config = {
-                    'Financeiro': { mes: idxMes[0], m25: idx2025[0], m26: idx2026[0] },
-                    'Cobertura':  { mes: idxMes[1], m25: idx2025[1], m26: idx2026[1] },
-                    'Caixa':      { mes: idxMes[2], m25: idx2025[2], m26: idx2026[2] }
-                };
-
-                let currentCat = { 'Financeiro': 'TOTAL GERAL', 'Cobertura': 'TOTAL GERAL', 'Caixa': 'TOTAL GERAL' };
-
-                for (let i = 0; i < rows.length; i++) {
-                    let r = rows[i] || [];
-                    if (r.length === 0) continue;
-                    
-                    ['Financeiro', 'Cobertura', 'Caixa'].forEach(sec => {
-                        let mesRaw = String(r[config[sec].mes] || '').toUpperCase().trim();
-                        
-                        if (mesRaw && !mesesValidos.includes(mesRaw) && !ignorarNomes.includes(mesRaw) && !mesRaw.startsWith('META')) {
-                            if (mesRaw.includes('TOTAL GERAL')) {
-                                currentCat[sec] = 'TOTAL GERAL';
-                            } else {
-                                currentCat[sec] = mesRaw;
-                                categoriasSet.add(mesRaw);
-                            }
-                        }
-
-                        if (mesesValidos.includes(mesRaw)) {
-                            countLinhasValidas++;
-                            let cat = currentCat[sec];
-                            if (!data[sec][cat]) data[sec][cat] = [];
-                            
-                            if (!data[sec][cat].some(d => d.mes === mesRaw)) {
-                                data[sec][cat].push({
-                                    mes: mesRaw,
-                                    m2025: parseAndCleanNumComp(r[config[sec].m25]),
-                                    m2026: parseAndCleanNumComp(r[config[sec].m26])
-                                });
-                            }
-                        }
-                    });
-                }
-            }
-
-            if (countLinhasValidas === 0) {
-                if(!silent) customAlert("Atenção: A base carregada não possui a estrutura de categorias esperada.");
-                return;
-            }
-
-            window.comparativoData = data;
-            
-            const selectCat = document.getElementById('comp-departamento-select');
-            selectCat.innerHTML = '';
-            Array.from(categoriasSet).sort().forEach(cat => {
-                if (cat === 'TOTAL GERAL') return; 
-                let opt = document.createElement('option');
-                opt.value = cat;
-                opt.textContent = cat;
-                selectCat.appendChild(opt);
-            });
-            let optTotal = document.createElement('option');
-            optTotal.value = 'TOTAL GERAL';
-            optTotal.textContent = 'TOTAL GERAL';
-            selectCat.insertBefore(optTotal, selectCat.firstChild);
-            selectCat.value = 'TOTAL GERAL';
-
-            renderComparativo();
-        }
-
-        // Listeners para os filtros da aba comparativa
-        document.getElementById('comp-section-select').addEventListener('change', renderComparativo);
-        document.getElementById('comp-departamento-select').addEventListener('change', renderComparativo);
-
-        function renderComparativo() {
-            if (!window.comparativoData) return;
-            
-            const secao = document.getElementById('comp-section-select').value;
-            const departamento = document.getElementById('comp-departamento-select').value;
-            
-            const dadosSecao = window.comparativoData[secao] || {};
-            const dados = dadosSecao[departamento];
-
-            const tbody = document.getElementById('table-comparativo-body');
-
-            if (!dados || dados.length === 0) {
-                document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${departamento})`;
-                createOrUpdateChart('chartComparativo', 'bar', {labels: [], datasets: []}, {responsive: true, maintainAspectRatio: false});
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Nenhum dado encontrado para o departamento selecionado nesta seção.</td></tr>`;
-                return;
-            }
-
-            document.getElementById('comp-chart-title').innerText = `Comparativo Mensal: 2025 vs 2026 - ${secao} (${departamento})`;
-            document.getElementById('comp-table-title').innerText = `Detalhamento de Variação - ${secao} (${departamento})`;
-            // Preparando Vetores Gráfico
-            const labels = dados.map(d => d.mes);
-            const data2025 = dados.map(d => d.m2025);
-            const data2026 = dados.map(d => d.m2026);
-
-            const dataRealizado = [];
-            const monthMap = { 'JANEIRO':'01', 'FEVEREIRO':'02', 'MARÇO':'03', 'MARCO':'03', 'ABRIL':'04', 'MAIO':'05', 'JUNHO':'06', 'JULHO':'07', 'AGOSTO':'08', 'SETEMBRO':'09', 'OUTUBRO':'10', 'NOVEMBRO':'11', 'DEZEMBRO':'12' };
-
-            dados.forEach(d => {
-                let mNum = monthMap[d.mes];
-                let realizadoVal = 0;
-                let clisSet = new Set();
-                let depUpper = departamento.toUpperCase().trim();
-
-                globalData.forEach(row => {
-                    if (row.MES_EXTRATO !== mNum) return;
-
-                    let match = false;
-                    if (depUpper === 'TOTAL GERAL') {
-                        match = true;
-                    } else if (depUpper.startsWith('GSA - MAC')) {
-                        if (row.SECAO_NORM && row.SECAO_NORM.startsWith('GSA - MAC')) match = true;
-                    } else if (depUpper.startsWith('GSA - REFRESKANT')) {
-                        if (row.SECAO_NORM && row.SECAO_NORM.startsWith('GSA - REFRESKANT')) match = true;
-                    } else if (depUpper === 'P1-GSA - DONA RAIZ') {
-                        if (row.DEPT_NORM === 'P1-GSA - DONA RAIZ') match = true;
-                    } else if (depUpper === 'P1-GSA - VELLY/PPA') {
-                        if (row.DEPT_NORM === 'P1-GSA - VELLY/PPA') match = true;
-                    } else {
-                        if (row.DEPT_NORM === depUpper) match = true;
-                    }
-
-                    if (match) {
-                        if (secao === 'Financeiro') realizadoVal += row.VLFAT_NUM;
-                        else if (secao === 'Caixa') realizadoVal += row.QTD_NUM;
-                        else if (secao === 'Cobertura' && row.CODCLI) clisSet.add(row.CODCLI);
-                    }
-                });
-
-                if (secao === 'Cobertura') realizadoVal = clisSet.size;
-                dataRealizado.push(realizadoVal);
-            });
-
-            createOrUpdateChart('chartComparativo', 'bar', {
-                labels: labels,
-                datasets: [
-                    { label: 'Meta 2025', data: data2025, backgroundColor: '#5a6268', borderRadius: 4 },
-                    { label: 'Meta 2026', data: data2026, backgroundColor: '#00006b', borderRadius: 4 },
-                    { label: 'Realizado', data: dataRealizado, backgroundColor: '#2ecc71', borderRadius: 4 }
-                ]
-            }, {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let val = context.raw;
-                                return context.dataset.label + ': ' + (secao === 'Financeiro' ? formatCurrency(val) : formatNumber(val));
-                            }
-                        }
-                    },
-                    datalabels: { 
-                        display: true,
-                        anchor: 'center',
-                        align: 'center',
-                        rotation: -90,
-                        color: '#ffffff',
-                        font: { weight: 'normal', size: 11, family: "'Segoe UI', sans-serif" },
-                        formatter: function(value) {
-                            if (value === 0) return '';
-                            if (secao !== 'Financeiro') {
-                                if (value >= 1000000) return (value / 1000000).toFixed(1).replace('.', ',') + ' Mi';
-                                if (value >= 1000) return (value / 1000).toFixed(1).replace('.', ',') + ' mil';
-                                return formatNumber(value);
-                            }
-                            if (value >= 1000000) return 'R$ ' + (value / 1000000).toFixed(1).replace('.', ',') + ' Mi';
-                            if (value >= 1000) return 'R$ ' + (value / 1000).toFixed(1).replace('.', ',') + ' mil';
-                            return formatCurrency(value);
-                        }
-                    }
-                }
-            });
-
-            tbody.innerHTML = '';
-            let tot2025 = 0, tot2026 = 0, totRealizado = 0;
-
-            dados.forEach((d, index) => {
-                tot2025 += d.m2025;
-                tot2026 += d.m2026;
-                
-                let realVal = dataRealizado[index];
-                totRealizado += realVal;
-                
-                let diff = d.m2026 - d.m2025;
-                let perc = d.m2025 > 0 ? (diff / d.m2025) * 100 : (diff > 0 ? 100 : 0);
-
-                let badgeClass = perc > 0 ? 'success' : (perc < 0 ? 'danger' : 'secondary');
-                let icon = perc > 0 ? 'fa-arrow-trend-up' : (perc < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
-                let signal = perc > 0 ? '+' : '';
-
-                let percReal = d.m2026 > 0 ? (realVal / d.m2026) * 100 : (realVal > 0 ? 100 : 0);
-                let badgeRealClass = percReal >= 100 ? 'success' : (percReal >= 90 ? 'warning text-dark' : 'danger');
-                let badgeReal = (d.m2026 === 0 && realVal === 0) ? '<span class="text-muted">-</span>' : `<span class="badge bg-${badgeRealClass}">${percReal.toFixed(1)}%</span>`;
-
-                let val25 = secao === 'Financeiro' ? formatCurrency(d.m2025) : formatNumber(d.m2025);
-                let val26 = secao === 'Financeiro' ? formatCurrency(d.m2026) : formatNumber(d.m2026);
-                let valReal = secao === 'Financeiro' ? formatCurrency(realVal) : formatNumber(realVal);
-                let valDiff = secao === 'Financeiro' ? formatCurrency(diff) : formatNumber(diff);
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td class="fw-bold">${d.mes}</td>
-                        <td class="text-end">${val25}</td>
-                        <td class="text-end text-dark">${val26}</td>
-                        <td class="text-end text-success">${valReal}</td>
-                        <td class="text-center">${badgeReal}</td>
-                        <td class="text-end ${diff >= 0 ? 'text-success' : 'text-danger'}">${signal}${valDiff}</td>
-                        <td class="text-center"><span class="badge bg-${badgeClass}"><i class="fas ${icon}"></i> ${signal}${perc.toFixed(1)}%</span></td>
-                    </tr>
-                `;
-            });
-
-            let totDiff = tot2026 - tot2025;
-            let totPerc = tot2025 > 0 ? (totDiff / tot2025) * 100 : 0;
-            let totBadgeClass = totPerc > 0 ? 'success' : (totPerc < 0 ? 'danger' : 'secondary');
-            let totIcon = totPerc > 0 ? 'fa-arrow-trend-up' : (totPerc < 0 ? 'fa-arrow-trend-down' : 'fa-minus');
-            let totSignal = totPerc > 0 ? '+' : '';
-
-            let totPercReal = tot2026 > 0 ? (totRealizado / tot2026) * 100 : (totRealizado > 0 ? 100 : 0);
-            let totBadgeRealClass = totPercReal >= 100 ? 'success' : (totPercReal >= 90 ? 'warning text-dark' : 'danger');
-            let totBadgeReal = (tot2026 === 0 && totRealizado === 0) ? '<span class="text-muted">-</span>' : `<span class="badge bg-${totBadgeRealClass}">${totPercReal.toFixed(1)}%</span>`;
-
-            let t25 = secao === 'Financeiro' ? formatCurrency(tot2025) : formatNumber(tot2025);
-            let t26 = secao === 'Financeiro' ? formatCurrency(tot2026) : formatNumber(tot2026);
-            let tReal = secao === 'Financeiro' ? formatCurrency(totRealizado) : formatNumber(totRealizado);
-            let tDiff = secao === 'Financeiro' ? formatCurrency(totDiff) : formatNumber(totDiff);
-
-            tbody.innerHTML += `
-                <tr class="table-light fw-bold" style="font-size: 1.05rem;">
-                    <td>TOTAL GERAL</td>
-                    <td class="text-end">${t25}</td>
-                    <td class="text-end text-primary">${t26}</td>
-                    <td class="text-end text-success">${tReal}</td>
-                    <td class="text-center">${totBadgeReal}</td>
-                    <td class="text-end ${totDiff >= 0 ? 'text-success' : 'text-danger'}">${totSignal}${tDiff}</td>
-                    <td class="text-center"><span class="badge bg-${totBadgeClass}"><i class="fas ${totIcon}"></i> ${totSignal}${totPerc.toFixed(1)}%</span></td>
-                </tr>
-            `;
         }
     </script>
 </body>
