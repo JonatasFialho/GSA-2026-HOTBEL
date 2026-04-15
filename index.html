@@ -458,7 +458,14 @@
                                 <i class="fas fa-times-circle me-1"></i> Limpar Filtros
                             </button>
                         </div>
-                        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-5">
+                        <div class="row g-2 row-cols-2 row-cols-sm-3 row-cols-xl-6">
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">TIPO VENDA</label>
+                                <select class="form-select fw-bold text-primary" id="filter-tipo-venda">
+                                    <option value="VENDIDO">Vendido</option>
+                                    <option value="FATURADO">Faturado</option>
+                                </select>
+                            </div>
                             <div class="col">
                                 <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">MÊS</label>
                                 <select class="form-select" id="filter-mes">
@@ -994,7 +1001,7 @@
             return stdCat; 
         }
 
-        function processRowData(row) {
+        function processRowData(row, fileName = '') {
             const normRow = {};
             for (let key in row) {
                 if (key) normRow[key.toUpperCase().trim()] = row[key];
@@ -1030,11 +1037,16 @@
             let cidade = String(normRow['CIDADE'] || normRow['MUNICIPIO'] || normRow['PRACA'] || 'N/I').replace(/\uFFFD/g, '').trim();
             let prod = String(normRow['DESCRICAO'] || normRow['PRODUTO'] || normRow['NOME_PRODUTO'] || normRow['CODPROD'] || normRow['SKU'] || 'Produto Não Identificado').replace(/\uFFFD/g, '').trim();
 
+            let tipoVenda = 'OUTROS';
+            let upName = String(fileName).toUpperCase();
+            if (upName.includes('VENDID')) tipoVenda = 'VENDIDO';
+            else if (upName.includes('FATURAD')) tipoVenda = 'FATURADO';
+
             return { 
                 VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
                 DEPT_NORM: deptRaw, CODCLI: codCli, SUPERVISOR: supervisor,
                 VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod,
-                SECAO_NORM: secaoRaw
+                SECAO_NORM: secaoRaw, TIPO_VENDA: tipoVenda
             };
         }
 
@@ -1092,7 +1104,7 @@
                                     processMetaFile(jsonMatrix, currentType);
                                 } else {
                                     const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                    globalData = globalData.concat(jsonObjects.map(r => processRowData(r, fileData.name)));
                                 }
                             });
                         } catch(ex) {
@@ -1114,7 +1126,7 @@
                             complete: function(results) {
                                 if (type === 'comparativo') extractComparativo(results.data, true);
                                 else if (type !== 'vendas') processMetaFile(results.data, type);
-                                else globalData = globalData.concat(results.data.map(processRowData));
+                                else globalData = globalData.concat(results.data.map(r => processRowData(r, fileData.name)));
                                 
                                 filesProcessed++;
                                 if (filesProcessed === data.length) finalizeDataLoading();
@@ -1171,7 +1183,7 @@
                         complete: function(results) {
                             if (type === 'comparativo') extractComparativo(results.data, true);
                             else if (type !== 'vendas') processMetaFile(results.data, type);
-                            else globalData = globalData.concat(results.data.map(processRowData));
+                            else globalData = globalData.concat(results.data.map(r => processRowData(r, file.name)));
                             filesProcessed++;
                             if (filesProcessed === allowedFiles.length) finalizeDataLoading();
                         },
@@ -1205,7 +1217,7 @@
                                     processMetaFile(jsonMatrix, currentType);
                                 } else {
                                     const jsonObjects = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                    globalData = globalData.concat(jsonObjects.map(processRowData));
+                                    globalData = globalData.concat(jsonObjects.map(r => processRowData(r, file.name)));
                                 }
                             });
                         } catch(ex) {
@@ -1356,10 +1368,17 @@
 
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('dashboard-content').style.display = 'block';
+            
+            // Forçar o valor VENDIDO como padrão ao iniciar (com verificação de segurança)
+            const tipoVendaEl = document.getElementById('filter-tipo-venda');
+            if (tipoVendaEl) tipoVendaEl.value = 'VENDIDO';
+            
             populateFilters();
             populateMetaButtons();
-            filteredData = [...globalData];
-            updateDashboard();
+            
+            // CORREÇÃO: Aplica os filtros imediatamente em vez de carregar tudo acumulado
+            applyFilters();
+            
             if (window.comparativoData) {
                 renderComparativo();
             }
@@ -1433,10 +1452,17 @@
             createCustomSelect('filter-cidade', cidades);
 
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
+            const selectTipo = document.getElementById('filter-tipo-venda');
+            if (selectTipo) {
+                selectTipo.removeEventListener('change', applyFilters);
+                selectTipo.addEventListener('change', applyFilters);
+            }
         }
 
         function clearAllFilters() {
             document.getElementById('filter-mes').value = '';
+            const tipoVendaEl = document.getElementById('filter-tipo-venda');
+            if (tipoVendaEl) tipoVendaEl.value = 'VENDIDO';
             
             ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
                 const container = document.getElementById(id);
@@ -1456,6 +1482,8 @@
 
         function applyFilters() {
             const mes = document.getElementById('filter-mes').value;
+            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
+            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : '';
             const sups = getCustomSelectValues('filter-supervisor');
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
@@ -1469,6 +1497,15 @@
                 hasAnyFilter = true;
             } else {
                 mesEl.classList.remove('has-filter');
+            }
+
+            if (filterTipoVendaEl) {
+                if (tipoVenda === 'FATURADO') {
+                    filterTipoVendaEl.classList.add('has-filter');
+                    hasAnyFilter = true;
+                } else {
+                    filterTipoVendaEl.classList.remove('has-filter');
+                }
             }
 
             const checkCustomFilter = (id, arr) => {
@@ -1496,6 +1533,7 @@
 
             filteredData = globalData.filter(row => {
                 return (!mes || row.MES_EXTRATO === mes) && 
+                       (!tipoVenda || row.TIPO_VENDA === tipoVenda) &&
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
@@ -2034,7 +2072,25 @@
 
         function renderMetas() {
             const rMes = {}; mesesOrdenados.forEach(m => rMes[m] = { sell: 0, clis: new Set() });
-            globalData.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
+            
+            // CORREÇÃO CRUCIAL: Ao renderizar a aba de metas, aplicamos TODOS os filtros EXCETO o filtro de mês, 
+            // para garantir que a aba mostre sempre os 12 meses do ano (o comparativo), mesmo se um mês estiver selecionado!
+            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
+            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : '';
+            const sups = getCustomSelectValues('filter-supervisor');
+            const vends = getCustomSelectValues('filter-vendedor');
+            const depts = getCustomSelectValues('filter-departamento');
+            const cids = getCustomSelectValues('filter-cidade');
+
+            const dadosExclusivosMetas = globalData.filter(row => {
+                return (!tipoVenda || row.TIPO_VENDA === tipoVenda) && 
+                       (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
+                       (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
+                       (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
+                       (cids.length === 0 || cids.includes(row.CIDADE));
+            });
+
+            dadosExclusivosMetas.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
             
             let qKey = getMetaKey(currentMetaCategory), lM = mesesOrdenados.map(m => nomeMeses[m]);
             const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0), rSArr = mesesOrdenados.map(m => rMes[m].sell);
@@ -2316,6 +2372,9 @@
             const dataRealizado = [];
             const monthMap = { 'JANEIRO':'01', 'FEVEREIRO':'02', 'MARÇO':'03', 'MARCO':'03', 'ABRIL':'04', 'MAIO':'05', 'JUNHO':'06', 'JULHO':'07', 'AGOSTO':'08', 'SETEMBRO':'09', 'OUTUBRO':'10', 'NOVEMBRO':'11', 'DEZEMBRO':'12' };
 
+            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
+            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : '';
+
             dados.forEach(d => {
                 let mNum = monthMap[d.mes];
                 let realizadoVal = 0;
@@ -2324,6 +2383,7 @@
 
                 globalData.forEach(row => {
                     if (row.MES_EXTRATO !== mNum) return;
+                    if (tipoVenda && row.TIPO_VENDA !== tipoVenda) return;
 
                     let match = false;
                     if (depUpper === 'TOTAL GERAL') {
