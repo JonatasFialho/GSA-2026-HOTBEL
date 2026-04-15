@@ -1264,10 +1264,16 @@
 
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('dashboard-content').style.display = 'block';
+            
+            // Garante que o seletor está em VENDIDO por padrão ao carregar
+            document.getElementById('filter-tipo-venda').value = 'VENDIDO';
+            
             populateFilters();
             populateMetaButtons();
-            filteredData = [...globalData];
-            updateDashboard();
+            
+            // Em vez de passar tudo de uma vez, aplica os filtros logo no arranque
+            applyFilters();
+            
             document.getElementById('loading-overlay').style.display = 'none';
         }
         
@@ -1381,8 +1387,13 @@
             }
 
             const tipoEl = document.getElementById('filter-tipo-venda');
-            tipoEl.classList.add('has-filter');
-            hasAnyFilter = true;
+            // Só destaca o filtro de tipo de venda se for FATURADO, já que VENDIDO é o padrão
+            if (tipoVenda === 'FATURADO') {
+                tipoEl.classList.add('has-filter');
+                hasAnyFilter = true;
+            } else {
+                tipoEl.classList.remove('has-filter');
+            }
 
             const checkCustomFilter = (id, arr) => {
                 const el = document.querySelector(`#${id} .select-btn`);
