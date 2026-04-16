@@ -1038,6 +1038,10 @@
             let qtdNum = parseFloat(qtdStr) || 0;
             if (qtdNum === 0 && vlFat > 0) qtdNum = 1; 
 
+            // Nova extração exclusiva para a coluna de Caixas (QT_CX)
+            let qtdCxStr = String(normRow['QT_CX'] || normRow['QTCX'] || normRow['CAIXAS'] || '0').replace(/\./g, '').replace(',', '.');
+            let qtdCxNum = parseFloat(qtdCxStr) || 0;
+
             let mesAno = '00';
             let dt = normRow['DTINI'] || normRow['DATA'] || normRow['DT_EMISSAO'] || '';
             if (dt) {
@@ -1063,7 +1067,7 @@
             else if (upName.includes('FATURAD')) tipoVenda = 'FATURADO';
 
             return { 
-                VLFAT_NUM: vlFat, QTD_NUM: qtdNum, MES_EXTRATO: mesAno, 
+                VLFAT_NUM: vlFat, QTD_NUM: qtdNum, QTD_CX_NUM: qtdCxNum, MES_EXTRATO: mesAno, 
                 DEPT_NORM: deptRaw, CODCLI: codCli, SUPERVISOR: supervisor,
                 VENDEDOR: vendedor, CIDADE: cidade, PRODUTO_NOME: prod,
                 SECAO_NORM: secaoRaw, TIPO_VENDA: tipoVenda
@@ -2423,7 +2427,7 @@
 
                     if (match) {
                         if (secao === 'Financeiro') realizadoVal += row.VLFAT_NUM;
-                        else if (secao === 'Caixa') realizadoVal += row.QTD_NUM;
+                        else if (secao === 'Caixa') realizadoVal += row.QTD_CX_NUM; // Agora puxa de QTD_CX_NUM
                         else if (secao === 'Cobertura' && row.CODCLI) clisSet.add(row.CODCLI);
                     }
                 });
