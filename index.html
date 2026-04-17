@@ -2162,7 +2162,17 @@
             });
 
             modalCidData = Array.from(mapCidades.values());
-            sortCidModalDir = { cid: 1, sellout: -1 };
+            
+            // Calcular o status numericamente para facilitar a ordenação (2=✅, 1=⚠️, 0=❌)
+            modalCidData.forEach(c => {
+                let count = 0;
+                modalCidDepts.forEach(d => { if (c.depts[d] > 0) count++; });
+                if (count === modalCidDepts.length && modalCidDepts.length > 0) c.statusVal = 2;
+                else if (count === 0) c.statusVal = 0;
+                else c.statusVal = 1;
+            });
+
+            sortCidModalDir = { cid: 1, sellout: -1, status: -1 };
             modalCidDepts.forEach(d => sortCidModalDir['dept_'+d] = 1);
             
             // Ordem inicial: maior total de sellout primeiro
@@ -2177,7 +2187,7 @@
             const thead = document.getElementById('modal-cidades-head'); 
             let html = `<tr><th class="ps-4">Posição</th><th onclick="sortCidModalTable('cid')" style="cursor:pointer">Cidade <i class="fas fa-sort ms-1"></i></th>`; 
             modalCidDepts.forEach(d => { html += `<th class="text-end" onclick="sortCidModalTable('dept_${d}')" style="cursor:pointer">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; }); 
-            html += `<th class="text-end pe-4" onclick="sortCidModalTable('sellout')" style="cursor:pointer">Total (R$) <i class="fas fa-sort ms-1"></i></th><th class="text-center">Status</th></tr>`; 
+            html += `<th class="text-end pe-4" onclick="sortCidModalTable('sellout')" style="cursor:pointer">Total (R$) <i class="fas fa-sort ms-1"></i></th><th class="text-center" onclick="sortCidModalTable('status')" style="cursor:pointer">Status <i class="fas fa-sort ms-1"></i></th></tr>`; 
             thead.innerHTML = html; 
         }
 
@@ -2191,11 +2201,9 @@
                 else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`; 
                 
                 let trHtml = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${c.cid}</td>`; 
-                let countDeptsComVenda = 0;
                 
                 modalCidDepts.forEach(d => { 
                     let val = c.depts[d]; 
-                    if (val > 0) countDeptsComVenda++;
                     // Se zerado, vermelho; se tiver venda, padrão.
                     let valClass = val === 0 ? 'text-danger fw-bold' : 'text-muted';
                     trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(val)}</td>`; 
@@ -2203,11 +2211,11 @@
                 
                 trHtml += `<td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(c.sellout)}</td>`; 
                 
-                // Status da cidade: ✅ todos / ⚠️ algum zerado / ❌ tudo zerado
+                // Status da cidade com base na variavel statusVal: ✅ = 2 / ⚠️ = 1 / ❌ = 0
                 let statusIcon = '';
-                if (countDeptsComVenda === modalCidDepts.length && modalCidDepts.length > 0) {
+                if (c.statusVal === 2) {
                     statusIcon = '✅';
-                } else if (countDeptsComVenda === 0) {
+                } else if (c.statusVal === 0) {
                     statusIcon = '❌';
                 } else {
                     statusIcon = '⚠️';
@@ -2225,6 +2233,7 @@
             modalCidData.sort((a, b) => { 
                 if(key === 'cid') return dir * a.cid.localeCompare(b.cid); 
                 if(key === 'sellout') return dir * (a.sellout - b.sellout); 
+                if(key === 'status') return dir * (a.statusVal - b.statusVal); 
                 if(key.startsWith('dept_')) return dir * (a.depts[key.replace('dept_', '')] - b.depts[key.replace('dept_', '')]); 
                 return 0; 
             }); 
@@ -2337,6 +2346,8 @@
                     let body = [];
 
                     const cleanStr = (str) => String(str).replace(/\u00A0/g, ' ');
+                    // Remove R$ no PDF para dar muito mais espaço ao texto e evitar quebras de linha
+                    const cleanCurrencyForPDF = (val) => cleanStr(formatCurrency(val)).replace(/R\$\s?/ig, '').trim();
 
                     if (type === 'vendedores') {
                         head = [['Posição', 'Vendedor', 'Clientes Posit.', ...modalVendDepts.map(d => d + ' (R$)'), 'Total (R$)']];
@@ -2344,8 +2355,8 @@
                             `${index + 1}º`,
                             v.vend,
                             formatNumber(v.clientes),
-                            ...modalVendDepts.map(d => cleanStr(formatCurrency(v.depts[d]))),
-                            cleanStr(formatCurrency(v.sellout))
+                            ...modalVendDepts.map(d => cleanCurrencyForPDF(v.depts[d])),
+                            cleanCurrencyForPDF(v.sellout)
                         ]);
                     } else if (type === 'produtos') {
                         head = [['Posição', 'Produto / SKU', 'Departamento', 'Clientes Posit.', 'Qtd Vendida', 'Sell Out (R$)']];
@@ -2355,22 +2366,20 @@
                             p.dept,
                             formatNumber(p.clientes),
                             formatNumber(p.qtd),
-                            cleanStr(formatCurrency(p.sellout))
+                            cleanCurrencyForPDF(p.sellout)
                         ]);
                     } else if (type === 'cidades') {
                         head = [['Posição', 'Cidade', ...modalCidDepts.map(d => d + ' (R$)'), 'Total (R$)', 'Status']];
                         body = modalCidData.map((c, index) => {
-                            let count = 0;
-                            modalCidDepts.forEach(d => { if(c.depts[d] > 0) count++; });
                             let statusStr = '';
-                            if (count === modalCidDepts.length && modalCidDepts.length > 0) statusStr = 'OK';
-                            else if (count === 0) statusStr = 'Zerado';
+                            if (c.statusVal === 2) statusStr = 'OK';
+                            else if (c.statusVal === 0) statusStr = 'Zerado';
                             else statusStr = 'Alerta';
                             return [
                                 `${index + 1}º`,
                                 c.cid,
-                                ...modalCidDepts.map(d => cleanStr(formatCurrency(c.depts[d]))),
-                                cleanStr(formatCurrency(c.sellout)),
+                                ...modalCidDepts.map(d => cleanCurrencyForPDF(c.depts[d])),
+                                cleanCurrencyForPDF(c.sellout),
                                 statusStr
                             ];
                         });
@@ -2379,7 +2388,7 @@
                     doc.autoTable({
                         startY: 38, head: head, body: body, theme: 'striped',
                         headStyles: { fillColor: [15, 76, 129], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
-                        styles: { fontSize: 9, cellPadding: 4, textColor: [45, 52, 54] },
+                        styles: { fontSize: 7.5, cellPadding: 2.5, textColor: [45, 52, 54] },
                         alternateRowStyles: { fillColor: [245, 247, 250] },
                         didParseCell: function(data) {
                             if (data.section === 'body') {
