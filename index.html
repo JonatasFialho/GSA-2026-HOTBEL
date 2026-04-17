@@ -614,7 +614,10 @@
                     <div class="table-custom-wrapper">
                         <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <span>Tabela Analítica - Desempenho de Cidades</span>
-                            <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('Tabela_Analitica.csv')"><i class="fas fa-download"></i> Exportar</button>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="showCidadesModal()"><i class="fas fa-list me-1"></i> Ver Detalhes</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('Tabela_Analitica.csv')"><i class="fas fa-download"></i> Exportar</button>
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover table-custom" id="analytical-table">
@@ -766,6 +769,7 @@
         </div>
     </div>
 
+    <!-- MODAL PRODUTOS -->
     <div class="modal fade" id="modalProdutos" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
             <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
@@ -784,14 +788,42 @@
                             <thead>
                                 <tr>
                                     <th class="ps-4">Posição</th>
-                                    <th onclick="sortProdModalTable('prod')">Produto / SKU <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('dept')">Departamento <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('clientes')">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('qtd')">Qtd Vendida <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-end pe-4" onclick="sortProdModalTable('sellout')">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
+                                    <th onclick="sortProdModalTable('prod')" style="cursor:pointer">Produto / SKU <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('dept')" style="cursor:pointer">Departamento <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('clientes')" style="cursor:pointer">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('qtd')" style="cursor:pointer">Qtd Vendida <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-end pe-4" onclick="sortProdModalTable('sellout')" style="cursor:pointer">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
                                 </tr>
                             </thead>
                             <tbody id="modal-produtos-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO MODAL: RANKING DE CIDADES -->
+    <div class="modal fade" id="modalCidades" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
+            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header align-items-center" style="border-bottom: 1px solid var(--border-color);">
+                    <h5 class="modal-title m-0" style="color: var(--text-dark); font-weight: bold;"><i class="fas fa-city me-2 text-info"></i> Ranking de Cidades</h5>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" onclick="exportModalToPDF(event, 'cidades')">
+                            <i class="fas fa-file-pdf me-1"></i> Gerar PDF
+                        </button>
+                        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body p-0" id="pdf-cidades-container">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-custom m-0">
+                            <thead id="modal-cidades-head"></thead>
+                            <tbody id="modal-cidades-body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -2085,6 +2117,122 @@
             sortProdModalDir[key] *= -1; renderProdModalTableBody();
         }
 
+        // ================= NOVO MODAL CIDADES =================
+        let modalCidData = []; 
+        let modalCidDepts = []; 
+        let sortCidModalDir = {};
+        
+        function showCidadesModal() {
+            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
+            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : 'VENDIDO';
+            const mes = document.getElementById('filter-mes').value;
+            const sups = getCustomSelectValues('filter-supervisor');
+            const vends = getCustomSelectValues('filter-vendedor');
+
+            // 1. Obter os departamentos únicos da base geral
+            modalCidDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            
+            // 2. Criar a base fixa de cidades (Ignorando o filtro de MÊS)
+            // Considera apenas TIPO_VENDA, SUPERVISOR e VENDEDOR
+            const baseCidades = globalData.filter(row => {
+                return (!tipoVenda || row.TIPO_VENDA === tipoVenda) &&
+                       (sups.length === 0 || sups.includes(row.SUPERVISOR)) &&
+                       (vends.length === 0 || vends.includes(row.VENDEDOR));
+            });
+
+            const mapCidades = new Map();
+            baseCidades.forEach(row => {
+                if (!mapCidades.has(row.CIDADE)) {
+                    let initialDepts = {};
+                    modalCidDepts.forEach(d => initialDepts[d] = 0);
+                    mapCidades.set(row.CIDADE, { cid: row.CIDADE, sellout: 0, depts: initialDepts });
+                }
+            });
+
+            // 3. Somar os valores reais respeitando o filtro de MÊS
+            const salesCidades = baseCidades.filter(row => !mes || row.MES_EXTRATO === mes);
+            salesCidades.forEach(row => {
+                if (mapCidades.has(row.CIDADE)) {
+                    const entry = mapCidades.get(row.CIDADE);
+                    entry.sellout += row.VLFAT_NUM;
+                    if (entry.depts[row.DEPT_NORM] !== undefined) {
+                        entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                    }
+                }
+            });
+
+            modalCidData = Array.from(mapCidades.values());
+            sortCidModalDir = { cid: 1, sellout: -1 };
+            modalCidDepts.forEach(d => sortCidModalDir['dept_'+d] = 1);
+            
+            // Ordem inicial: maior total de sellout primeiro
+            modalCidData.sort((a, b) => b.sellout - a.sellout);
+            
+            renderModalCidadesHead(); 
+            renderModalCidadesBody();
+            new bootstrap.Modal(document.getElementById('modalCidades')).show();
+        }
+
+        function renderModalCidadesHead() { 
+            const thead = document.getElementById('modal-cidades-head'); 
+            let html = `<tr><th class="ps-4">Posição</th><th onclick="sortCidModalTable('cid')" style="cursor:pointer">Cidade <i class="fas fa-sort ms-1"></i></th>`; 
+            modalCidDepts.forEach(d => { html += `<th class="text-end" onclick="sortCidModalTable('dept_${d}')" style="cursor:pointer">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; }); 
+            html += `<th class="text-end pe-4" onclick="sortCidModalTable('sellout')" style="cursor:pointer">Total (R$) <i class="fas fa-sort ms-1"></i></th><th class="text-center">Status</th></tr>`; 
+            thead.innerHTML = html; 
+        }
+
+        function renderModalCidadesBody() { 
+            const tbody = document.getElementById('modal-cidades-body'); 
+            tbody.innerHTML = ''; 
+            modalCidData.forEach((c, index) => { 
+                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`; 
+                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; 
+                else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; 
+                else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`; 
+                
+                let trHtml = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${c.cid}</td>`; 
+                let countDeptsComVenda = 0;
+                
+                modalCidDepts.forEach(d => { 
+                    let val = c.depts[d]; 
+                    if (val > 0) countDeptsComVenda++;
+                    // Se zerado, vermelho; se tiver venda, padrão.
+                    let valClass = val === 0 ? 'text-danger fw-bold' : 'text-muted';
+                    trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(val)}</td>`; 
+                }); 
+                
+                trHtml += `<td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(c.sellout)}</td>`; 
+                
+                // Status da cidade: ✅ todos / ⚠️ algum zerado / ❌ tudo zerado
+                let statusIcon = '';
+                if (countDeptsComVenda === modalCidDepts.length && modalCidDepts.length > 0) {
+                    statusIcon = '✅';
+                } else if (countDeptsComVenda === 0) {
+                    statusIcon = '❌';
+                } else {
+                    statusIcon = '⚠️';
+                }
+                trHtml += `<td class="text-center align-middle fs-5">${statusIcon}</td>`;
+                
+                const tr = document.createElement('tr'); 
+                tr.innerHTML = trHtml; 
+                tbody.appendChild(tr); 
+            }); 
+        }
+
+        function sortCidModalTable(key) { 
+            const dir = sortCidModalDir[key]; 
+            modalCidData.sort((a, b) => { 
+                if(key === 'cid') return dir * a.cid.localeCompare(b.cid); 
+                if(key === 'sellout') return dir * (a.sellout - b.sellout); 
+                if(key.startsWith('dept_')) return dir * (a.depts[key.replace('dept_', '')] - b.depts[key.replace('dept_', '')]); 
+                return 0; 
+            }); 
+            sortCidModalDir[key] *= -1; 
+            renderModalCidadesBody(); 
+        }
+        // ================= FIM MODAL CIDADES =================
+
         function changeMetaCategory(cat) {
             currentMetaCategory = cat;
             const catName = cat === 'TT' ? 'TOTAL GERAL' : cat;
@@ -2199,7 +2347,7 @@
                             ...modalVendDepts.map(d => cleanStr(formatCurrency(v.depts[d]))),
                             cleanStr(formatCurrency(v.sellout))
                         ]);
-                    } else {
+                    } else if (type === 'produtos') {
                         head = [['Posição', 'Produto / SKU', 'Departamento', 'Clientes Posit.', 'Qtd Vendida', 'Sell Out (R$)']];
                         body = modalProdData.map((p, index) => [
                             `${index + 1}º`,
@@ -2209,6 +2357,23 @@
                             formatNumber(p.qtd),
                             cleanStr(formatCurrency(p.sellout))
                         ]);
+                    } else if (type === 'cidades') {
+                        head = [['Posição', 'Cidade', ...modalCidDepts.map(d => d + ' (R$)'), 'Total (R$)', 'Status']];
+                        body = modalCidData.map((c, index) => {
+                            let count = 0;
+                            modalCidDepts.forEach(d => { if(c.depts[d] > 0) count++; });
+                            let statusStr = '';
+                            if (count === modalCidDepts.length && modalCidDepts.length > 0) statusStr = 'OK';
+                            else if (count === 0) statusStr = 'Zerado';
+                            else statusStr = 'Alerta';
+                            return [
+                                `${index + 1}º`,
+                                c.cid,
+                                ...modalCidDepts.map(d => cleanStr(formatCurrency(c.depts[d]))),
+                                cleanStr(formatCurrency(c.sellout)),
+                                statusStr
+                            ];
+                        });
                     }
 
                     doc.autoTable({
@@ -2222,9 +2387,12 @@
                                 if (type === 'vendedores') {
                                     if (data.column.index === 2) data.cell.styles.halign = 'center'; 
                                     if (data.column.index > 2) data.cell.styles.halign = 'right'; 
-                                } else { 
+                                } else if (type === 'produtos') { 
                                     if (data.column.index === 2) data.cell.styles.halign = 'center'; 
                                     if ([3, 4, 5].includes(data.column.index)) data.cell.styles.halign = 'right'; 
+                                } else if (type === 'cidades') {
+                                    if (data.column.index > 1 && data.column.index < head[0].length - 1) data.cell.styles.halign = 'right';
+                                    if (data.column.index === head[0].length - 1) data.cell.styles.halign = 'center';
                                 }
                             }
                         }
