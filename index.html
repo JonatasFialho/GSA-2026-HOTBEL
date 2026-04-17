@@ -2128,9 +2128,17 @@
             const mes = document.getElementById('filter-mes').value;
             const sups = getCustomSelectValues('filter-supervisor');
             const vends = getCustomSelectValues('filter-vendedor');
+            const deptsFiltro = getCustomSelectValues('filter-departamento'); // NOVA CAPTURA: Filtro de departamento
 
             // 1. Obter os departamentos únicos da base geral
-            modalCidDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            let todosDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
+            
+            // Aplica o filtro de departamento nas colunas do modal se houver seleção
+            if (deptsFiltro.length > 0) {
+                modalCidDepts = todosDepts.filter(d => deptsFiltro.includes(d));
+            } else {
+                modalCidDepts = todosDepts;
+            }
             
             // 2. Criar a base fixa de cidades (Ignorando o filtro de MÊS)
             // Considera apenas TIPO_VENDA, SUPERVISOR e VENDEDOR
@@ -2154,9 +2162,12 @@
             salesCidades.forEach(row => {
                 if (mapCidades.has(row.CIDADE)) {
                     const entry = mapCidades.get(row.CIDADE);
-                    entry.sellout += row.VLFAT_NUM;
-                    if (entry.depts[row.DEPT_NORM] !== undefined) {
-                        entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                    // Somar apenas se o departamento fizer parte da seleção atual para não distorcer o Total
+                    if (modalCidDepts.includes(row.DEPT_NORM)) {
+                        entry.sellout += row.VLFAT_NUM;
+                        if (entry.depts[row.DEPT_NORM] !== undefined) {
+                            entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                        }
                     }
                 }
             });
@@ -2320,7 +2331,11 @@
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('landscape'); 
 
-                    const titleText = type === 'vendedores' ? 'Ranking Completo de Vendedores' : 'Detalhamento de Produtos Vendidos';
+                    let titleText = '';
+                    if (type === 'vendedores') titleText = 'Ranking Completo de Vendedores';
+                    else if (type === 'produtos') titleText = 'Detalhamento de Produtos Vendidos';
+                    else if (type === 'cidades') titleText = 'Ranking Completo de Cidades';
+                    
                     const dataAtual = new Date().toLocaleString('pt-PT');
 
                     doc.setFontSize(16);
@@ -2329,7 +2344,23 @@
 
                     doc.setFontSize(12);
                     doc.setTextColor(75, 101, 132);
-                    doc.text(titleText, 14, 27);
+                    doc.text(titleText, 14, 26);
+
+                    // CAPTURA DOS FILTROS APLICADOS PARA O CABEÇALHO DO PDF
+                    const fTipo = document.getElementById('filter-tipo-venda') ? document.getElementById('filter-tipo-venda').value : 'VENDIDO';
+                    const fMes = document.getElementById('filter-mes') ? document.getElementById('filter-mes').value : '';
+                    const fMesStr = fMes ? `${nomeMesesCompleto[fMes]} / 2026` : 'Todos (Acumulado)';
+                    const fSups = getCustomSelectValues('filter-supervisor');
+                    const fVends = getCustomSelectValues('filter-vendedor');
+                    
+                    let strFiltros = `Filtros: Tipo (${fTipo}) | Mês (${fMesStr})`;
+                    if(fSups.length > 0) strFiltros += ` | Sup (${fSups.join(', ')})`;
+                    if(fVends.length > 0) strFiltros += ` | Vend (${fVends.join(', ')})`;
+                    if(strFiltros.length > 140) strFiltros = strFiltros.substring(0, 137) + '...';
+
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(strFiltros, 14, 31.5);
 
                     doc.setFontSize(10);
                     doc.setTextColor(100, 100, 100);
@@ -2340,7 +2371,7 @@
 
                     doc.setDrawColor(15, 76, 129);
                     doc.setLineWidth(0.5);
-                    doc.line(14, 32, doc.internal.pageSize.width - 14, 32);
+                    doc.line(14, 34, doc.internal.pageSize.width - 14, 34);
 
                     let head = [];
                     let body = [];
@@ -2386,7 +2417,7 @@
                     }
 
                     doc.autoTable({
-                        startY: 38, head: head, body: body, theme: 'striped',
+                        startY: 39, head: head, body: body, theme: 'striped',
                         headStyles: { fillColor: [15, 76, 129], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
                         styles: { fontSize: 7.5, cellPadding: 2.5, textColor: [45, 52, 54] },
                         alternateRowStyles: { fillColor: [245, 247, 250] },
@@ -2402,6 +2433,28 @@
                                 } else if (type === 'cidades') {
                                     if (data.column.index > 1 && data.column.index < head[0].length - 1) data.cell.styles.halign = 'right';
                                     if (data.column.index === head[0].length - 1) data.cell.styles.halign = 'center';
+                                    
+                                    // Cor vermelha para valores zerados nos departamentos
+                                    if (data.column.index > 1 && data.column.index < head[0].length - 2) {
+                                        if (data.cell.raw === '0,00' || data.cell.raw === '0') {
+                                            data.cell.styles.textColor = [220, 53, 69]; // Vermelho
+                                            data.cell.styles.fontStyle = 'bold';
+                                        }
+                                    }
+                                    
+                                    // Cores dinâmicas para a coluna Status
+                                    if (data.column.index === head[0].length - 1) {
+                                        if (data.cell.raw === 'OK') {
+                                            data.cell.styles.textColor = [40, 167, 69]; // Verde
+                                            data.cell.styles.fontStyle = 'bold';
+                                        } else if (data.cell.raw === 'Alerta') {
+                                            data.cell.styles.textColor = [204, 153, 0]; // Amarelo Escuro
+                                            data.cell.styles.fontStyle = 'bold';
+                                        } else if (data.cell.raw === 'Zerado') {
+                                            data.cell.styles.textColor = [220, 53, 69]; // Vermelho
+                                            data.cell.styles.fontStyle = 'bold';
+                                        }
+                                    }
                                 }
                             }
                         }
