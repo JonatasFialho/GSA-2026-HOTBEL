@@ -610,6 +610,29 @@
                         </div>
                     </div>
 
+                    <!-- Nova Tabela de Supervisores -->
+                    <div class="table-custom-wrapper mb-4">
+                        <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <span>Tabela de Supervisores</span>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportSupervisoresToCSV('Desempenho_Supervisores.csv')"><i class="fas fa-download"></i> Exportar</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-custom" id="supervisores-table">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4">Posição</th>
+                                        <th style="cursor: pointer;" onclick="sortSupTable(0)">Supervisor <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortSupTable(1)" class="text-end">Positivação Geral <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortSupTable(2)" class="text-end">Volume Geral <i class="fas fa-sort ms-1"></i></th>
+                                        <th style="cursor: pointer;" onclick="sortSupTable(3)" class="text-end pe-4">Sell Out Geral (R$) <i class="fas fa-sort ms-1"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-supervisores-body"></tbody>
+                                <tfoot id="table-supervisores-foot"></tfoot>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Tabela Analítica -->
                     <div class="table-custom-wrapper">
                         <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -1598,7 +1621,7 @@
             updateDashboard();
         }
 
-        function updateDashboard() { calculateKPIs(); renderCharts(); renderTable(); renderMetas(); }
+        function updateDashboard() { calculateKPIs(); renderCharts(); renderSupervisoresTable(); renderTable(); renderMetas(); }
 
         function calculateKPIs() {
             let totalSellOut = 0; const clientesSet = new Set(), mesesFiltradosSet = new Set(), clientesPorMes = {};
@@ -1986,6 +2009,104 @@
             });
         }
 
+        // ================= Tabela de Supervisores =================
+        let tableSupData = [];
+        let sortSupDirections = [1, 1, 1, 1];
+        let currentTotSupClientes = 0, currentTotSupVol = 0, currentTotSupSell = 0;
+
+        function renderSupervisoresTable() {
+            // Lógica de Título Dinâmico
+            const mes = document.getElementById('filter-mes').value;
+            const depts = getCustomSelectValues('filter-departamento');
+            let mesStr = mes ? `${nomeMesesCompleto[mes]} / 2026` : 'Geral';
+            let deptStr = depts.length > 0 ? ` - ${depts.join(', ')}` : '';
+            const titleEl = document.getElementById('title-supervisores');
+            if (titleEl) {
+                titleEl.innerText = `Tabela de Supervisores - ${mesStr}${deptStr}`;
+            }
+
+            const mapSups = new Map();
+            const totalClientes = new Set();
+            currentTotSupVol = 0;
+            currentTotSupSell = 0;
+
+            filteredData.forEach(row => {
+                const sup = row.SUPERVISOR;
+                if (!mapSups.has(sup)) {
+                    mapSups.set(sup, { sup: sup, sellout: 0, volume: 0, clientes: new Set() });
+                }
+                const entry = mapSups.get(sup);
+                
+                entry.sellout += row.VLFAT_NUM;
+                entry.volume += row.QTD_NUM;
+                if (row.CODCLI) {
+                    entry.clientes.add(row.CODCLI);
+                    totalClientes.add(row.CODCLI);
+                }
+                
+                currentTotSupSell += row.VLFAT_NUM;
+                currentTotSupVol += row.QTD_NUM;
+            });
+
+            currentTotSupClientes = totalClientes.size;
+
+            tableSupData = Array.from(mapSups.values()).map(v => ({
+                sup: v.sup,
+                clientes: v.clientes.size,
+                volume: v.volume,
+                sellout: v.sellout
+            })).sort((a,b) => b.sellout - a.sellout);
+
+            buildSupTableHTML();
+        }
+
+        function buildSupTableHTML() {
+            const tbody = document.getElementById('table-supervisores-body');
+            const tfoot = document.getElementById('table-supervisores-foot');
+            tbody.innerHTML = '';
+            
+            tableSupData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`;
+                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; 
+                else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; 
+                else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`;
+                
+                tr.innerHTML = `
+                    <td class="ps-4 align-middle">${posBadge}</td>
+                    <td class="align-middle fw-bold">${row.sup}</td>
+                    <td class="text-end align-middle">${formatNumber(row.clientes)}</td>
+                    <td class="text-end align-middle">${formatNumber(row.volume)}</td>
+                    <td class="text-end fw-bold text-primary align-middle pe-4">${formatCurrency(row.sellout)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            tfoot.innerHTML = `
+                <tr class="table-light fw-bold" style="font-size: 1.05rem;">
+                    <td colspan="2" class="ps-4 text-end">TOTAL GERAL</td>
+                    <td class="text-end">${formatNumber(currentTotSupClientes)}</td>
+                    <td class="text-end">${formatNumber(currentTotSupVol)}</td>
+                    <td class="text-end text-primary pe-4">${formatCurrency(currentTotSupSell)}</td>
+                </tr>
+            `;
+        }
+
+        function sortSupTable(columnIndex) {
+            const keys = ['sup', 'clientes', 'volume', 'sellout'];
+            const key = keys[columnIndex];
+            const dir = sortSupDirections[columnIndex];
+            
+            tableSupData.sort((a, b) => {
+                if (typeof a[key] === 'string') return dir * a[key].localeCompare(b[key]);
+                return dir * (a[key] - b[key]);
+            });
+            
+            sortSupDirections[columnIndex] *= -1;
+            buildSupTableHTML();
+        }
+        // =================================================================
+
         let tableData = [];
         function renderTable() {
             const mapCidades = new Map();
@@ -2311,6 +2432,17 @@
 
         function exportTableToCSV(filename) {
             let csv = []; const rows = document.querySelectorAll("#analytical-table tr");
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
+                csv.push(row.join(";"));
+            }
+            const csvFile = new Blob(["\uFEFF"+csv.join("\n")], {type: "text/csv;charset=utf-8;"});
+            const downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click();
+        }
+
+        function exportSupervisoresToCSV(filename) {
+            let csv = []; const rows = document.querySelectorAll("#supervisores-table tr");
             for (let i = 0; i < rows.length; i++) {
                 let row = [], cols = rows[i].querySelectorAll("td, th");
                 for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
