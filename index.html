@@ -613,7 +613,7 @@
                     <!-- Nova Tabela de Supervisores -->
                     <div class="table-custom-wrapper mb-4">
                         <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <span>Tabela de Supervisores</span>
+                            <span id="title-supervisores">Tabela de Supervisores - Geral</span>
                             <button class="btn btn-sm btn-outline-primary" onclick="exportSupervisoresToCSV('Desempenho_Supervisores.csv')"><i class="fas fa-download"></i> Exportar</button>
                         </div>
                         <div class="table-responsive">
@@ -2015,14 +2015,25 @@
         let currentTotSupClientes = 0, currentTotSupVol = 0, currentTotSupSell = 0;
 
         function renderSupervisoresTable() {
-            // Lógica de Título Dinâmico
+            // Lógica de Título Dinâmico Refinada
             const mes = document.getElementById('filter-mes').value;
             const depts = getCustomSelectValues('filter-departamento');
-            let mesStr = mes ? `${nomeMesesCompleto[mes]} / 2026` : 'Geral';
-            let deptStr = depts.length > 0 ? ` - ${depts.join(', ')}` : '';
+            
+            let titleText = 'Tabela de Supervisores';
+            
+            if (mes && depts.length > 0) {
+                titleText += ` - ${nomeMesesCompleto[mes]} / 2026 - ${depts.join(', ')}`;
+            } else if (mes) {
+                titleText += ` - ${nomeMesesCompleto[mes]} / 2026`;
+            } else if (depts.length > 0) {
+                titleText += ` - Geral - ${depts.join(', ')}`;
+            } else {
+                titleText += ' - Geral';
+            }
+
             const titleEl = document.getElementById('title-supervisores');
             if (titleEl) {
-                titleEl.innerText = `Tabela de Supervisores - ${mesStr}${deptStr}`;
+                titleEl.innerText = titleText;
             }
 
             const mapSups = new Map();
