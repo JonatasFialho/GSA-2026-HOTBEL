@@ -500,6 +500,11 @@
                                 <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">CIDADE</label>
                                 <div id="filter-cidade"></div>
                             </div>
+                            <!-- NOVO FILTRO DE SEÇÃO -->
+                            <div class="col">
+                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">SEÇÃO</label>
+                                <div id="filter-secao"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1520,6 +1525,7 @@
             const vendedores = [...new Set(globalData.map(d => d.VENDEDOR).filter(Boolean))].sort();
             const departamentos = [...new Set(globalData.map(d => d.DEPT_NORM).filter(d => d !== 'OUTROS'))].sort();
             const cidades = [...new Set(globalData.map(d => d.CIDADE).filter(Boolean))].sort();
+            const secoes = [...new Set(globalData.map(d => d.SECAO_NORM).filter(Boolean))].sort();
 
             const selectMes = document.getElementById('filter-mes');
             selectMes.innerHTML = '<option value="">Todos (Acumulado)</option>';
@@ -1529,6 +1535,7 @@
             createCustomSelect('filter-vendedor', vendedores);
             createCustomSelect('filter-departamento', departamentos);
             createCustomSelect('filter-cidade', cidades);
+            createCustomSelect('filter-secao', secoes);
 
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
             const selectTipo = document.getElementById('filter-tipo-venda');
@@ -1543,7 +1550,7 @@
             const tipoVendaEl = document.getElementById('filter-tipo-venda');
             if (tipoVendaEl) tipoVendaEl.value = 'VENDIDO';
             
-            ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
+            ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade', 'filter-secao'].forEach(id => {
                 const container = document.getElementById(id);
                 if(container) {
                     const cbTodos = container.querySelector('.cb-todos');
@@ -1567,6 +1574,7 @@
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
             const cids = getCustomSelectValues('filter-cidade');
+            const secs = getCustomSelectValues('filter-secao');
             
             let hasAnyFilter = false;
             
@@ -1603,6 +1611,7 @@
             checkCustomFilter('filter-vendedor', vends);
             checkCustomFilter('filter-departamento', depts);
             checkCustomFilter('filter-cidade', cids);
+            checkCustomFilter('filter-secao', secs);
 
             const btnClear = document.getElementById('btn-clear-filters');
             if(btnClear) {
@@ -1616,7 +1625,8 @@
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
-                       (cids.length === 0 || cids.includes(row.CIDADE));
+                       (cids.length === 0 || cids.includes(row.CIDADE)) &&
+                       (secs.length === 0 || secs.includes(row.SECAO_NORM));
             });
             updateDashboard();
         }
@@ -2120,13 +2130,44 @@
 
         let tableData = [];
         function renderTable() {
+            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
+            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : '';
+            const sups = getCustomSelectValues('filter-supervisor');
+            const vends = getCustomSelectValues('filter-vendedor');
+
             const mapCidades = new Map();
+            
+            // 1. Monta a base fixa de Cidades e Supervisores (Ignorando filtro de Mês, Departamento e Seção)
+            // Considera apenas a base global filtrada por Tipo de Venda, Supervisor e Vendedor
+            globalData.forEach(row => {
+                if (tipoVenda && row.TIPO_VENDA !== tipoVenda) return;
+                if (sups.length > 0 && !sups.includes(row.SUPERVISOR)) return;
+                if (vends.length > 0 && !vends.includes(row.VENDEDOR)) return;
+                
+                const sup = row.SUPERVISOR, cid = row.CIDADE, key = sup + '|' + cid;
+                if (!mapCidades.has(key)) {
+                    mapCidades.set(key, { sup, cid, sellout: 0, clientes: new Set() });
+                }
+            });
+
+            // 2. Preenche os valores numéricos com base na tabela totalmente filtrada (incluindo Mês, etc.)
             filteredData.forEach(row => {
                 const sup = row.SUPERVISOR, cid = row.CIDADE, key = sup + '|' + cid;
-                if (!mapCidades.has(key)) mapCidades.set(key, { sup, cid, sellout: 0, clientes: new Set() });
-                const entry = mapCidades.get(key); entry.sellout += row.VLFAT_NUM; if (row.CODCLI) entry.clientes.add(row.CODCLI);
+                if (mapCidades.has(key)) {
+                    const entry = mapCidades.get(key);
+                    entry.sellout += row.VLFAT_NUM;
+                    if (row.CODCLI) entry.clientes.add(row.CODCLI);
+                }
             });
-            tableData = Array.from(mapCidades.values()).map(v => ({ sup: v.sup, cid: v.cid, clientes: v.clientes.size, sellout: v.sellout, ticket: v.clientes.size > 0 ? v.sellout / v.clientes.size : 0 })).sort((a,b) => b.sellout - a.sellout);
+
+            tableData = Array.from(mapCidades.values()).map(v => ({ 
+                sup: v.sup, 
+                cid: v.cid, 
+                clientes: v.clientes.size, 
+                sellout: v.sellout, 
+                ticket: v.clientes.size > 0 ? v.sellout / v.clientes.size : 0 
+            })).sort((a,b) => b.sellout - a.sellout);
+            
             buildTableHTML();
         }
 
@@ -2252,6 +2293,8 @@
         // ================= NOVO MODAL CIDADES =================
         let modalCidData = []; 
         let modalCidDepts = []; 
+        let modalCidSecs = [];
+        let isModalCidSecaoMode = false;
         let sortCidModalDir = {};
         
         function showCidadesModal() {
@@ -2260,7 +2303,11 @@
             const mes = document.getElementById('filter-mes').value;
             const sups = getCustomSelectValues('filter-supervisor');
             const vends = getCustomSelectValues('filter-vendedor');
-            const deptsFiltro = getCustomSelectValues('filter-departamento'); // NOVA CAPTURA: Filtro de departamento
+            const deptsFiltro = getCustomSelectValues('filter-departamento');
+            const secsFiltro = getCustomSelectValues('filter-secao'); // NOVA CAPTURA: Filtro de Seção
+
+            isModalCidSecaoMode = secsFiltro.length > 0;
+            modalCidSecs = secsFiltro;
 
             // 1. Obter os departamentos únicos da base geral
             let todosDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
@@ -2285,7 +2332,13 @@
                 if (!mapCidades.has(row.CIDADE)) {
                     let initialDepts = {};
                     modalCidDepts.forEach(d => initialDepts[d] = 0);
-                    mapCidades.set(row.CIDADE, { cid: row.CIDADE, sellout: 0, depts: initialDepts });
+                    
+                    let initialSecs = {};
+                    if (isModalCidSecaoMode) {
+                        modalCidSecs.forEach(s => initialSecs[s] = { sellout: 0, clis: new Set() });
+                    }
+
+                    mapCidades.set(row.CIDADE, { cid: row.CIDADE, sellout: 0, depts: initialDepts, secs: initialSecs });
                 }
             });
 
@@ -2294,11 +2347,21 @@
             salesCidades.forEach(row => {
                 if (mapCidades.has(row.CIDADE)) {
                     const entry = mapCidades.get(row.CIDADE);
-                    // Somar apenas se o departamento fizer parte da seleção atual para não distorcer o Total
-                    if (modalCidDepts.includes(row.DEPT_NORM)) {
-                        entry.sellout += row.VLFAT_NUM;
-                        if (entry.depts[row.DEPT_NORM] !== undefined) {
-                            entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                    
+                    if (isModalCidSecaoMode) {
+                        // MODO SEÇÃO: Somar apenas as seções selecionadas
+                        if (modalCidSecs.includes(row.SECAO_NORM)) {
+                            entry.sellout += row.VLFAT_NUM;
+                            entry.secs[row.SECAO_NORM].sellout += row.VLFAT_NUM;
+                            if (row.CODCLI) entry.secs[row.SECAO_NORM].clis.add(row.CODCLI);
+                        }
+                    } else {
+                        // MODO DEPARTAMENTO CLÁSSICO: Somar apenas se o departamento fizer parte da seleção
+                        if (modalCidDepts.includes(row.DEPT_NORM)) {
+                            entry.sellout += row.VLFAT_NUM;
+                            if (entry.depts[row.DEPT_NORM] !== undefined) {
+                                entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
+                            }
                         }
                     }
                 }
@@ -2309,14 +2372,28 @@
             // Calcular o status numericamente para facilitar a ordenação (2=✅, 1=⚠️, 0=❌)
             modalCidData.forEach(c => {
                 let count = 0;
-                modalCidDepts.forEach(d => { if (c.depts[d] > 0) count++; });
-                if (count === modalCidDepts.length && modalCidDepts.length > 0) c.statusVal = 2;
-                else if (count === 0) c.statusVal = 0;
-                else c.statusVal = 1;
+                if (isModalCidSecaoMode) {
+                    modalCidSecs.forEach(s => { if (c.secs[s].sellout > 0) count++; });
+                    if (count === modalCidSecs.length && modalCidSecs.length > 0) c.statusVal = 2;
+                    else if (count === 0) c.statusVal = 0;
+                    else c.statusVal = 1;
+                } else {
+                    modalCidDepts.forEach(d => { if (c.depts[d] > 0) count++; });
+                    if (count === modalCidDepts.length && modalCidDepts.length > 0) c.statusVal = 2;
+                    else if (count === 0) c.statusVal = 0;
+                    else c.statusVal = 1;
+                }
             });
 
             sortCidModalDir = { cid: 1, sellout: -1, status: -1 };
-            modalCidDepts.forEach(d => sortCidModalDir['dept_'+d] = 1);
+            if (isModalCidSecaoMode) {
+                modalCidSecs.forEach(s => { 
+                    sortCidModalDir['sec_sell_'+s] = 1; 
+                    sortCidModalDir['sec_cli_'+s] = 1; 
+                });
+            } else {
+                modalCidDepts.forEach(d => sortCidModalDir['dept_'+d] = 1);
+            }
             
             // Ordem inicial: maior total de sellout primeiro
             modalCidData.sort((a, b) => b.sellout - a.sellout);
@@ -2329,7 +2406,18 @@
         function renderModalCidadesHead() { 
             const thead = document.getElementById('modal-cidades-head'); 
             let html = `<tr><th class="ps-4">Posição</th><th onclick="sortCidModalTable('cid')" style="cursor:pointer">Cidade <i class="fas fa-sort ms-1"></i></th>`; 
-            modalCidDepts.forEach(d => { html += `<th class="text-end" onclick="sortCidModalTable('dept_${d}')" style="cursor:pointer">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; }); 
+            
+            if (isModalCidSecaoMode) {
+                modalCidSecs.forEach(s => {
+                    html += `<th class="text-end" onclick="sortCidModalTable('sec_sell_${s}')" style="cursor:pointer">${s} (R$) <i class="fas fa-sort ms-1"></i></th>`;
+                    html += `<th class="text-center" onclick="sortCidModalTable('sec_cli_${s}')" style="cursor:pointer">Posit. ${s} <i class="fas fa-sort ms-1"></i></th>`;
+                });
+            } else {
+                modalCidDepts.forEach(d => { 
+                    html += `<th class="text-end" onclick="sortCidModalTable('dept_${d}')" style="cursor:pointer">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; 
+                });
+            }
+             
             html += `<th class="text-end pe-4" onclick="sortCidModalTable('sellout')" style="cursor:pointer">Total (R$) <i class="fas fa-sort ms-1"></i></th><th class="text-center" onclick="sortCidModalTable('status')" style="cursor:pointer">Status <i class="fas fa-sort ms-1"></i></th></tr>`; 
             thead.innerHTML = html; 
         }
@@ -2345,13 +2433,25 @@
                 
                 let trHtml = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${c.cid}</td>`; 
                 
-                modalCidDepts.forEach(d => { 
-                    let val = c.depts[d]; 
-                    // Se zerado, vermelho; se tiver venda, padrão.
-                    let valClass = val === 0 ? 'text-danger fw-bold' : 'text-muted';
-                    trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(val)}</td>`; 
-                }); 
-                
+                if (isModalCidSecaoMode) {
+                    modalCidSecs.forEach(s => { 
+                        let valSell = c.secs[s].sellout;
+                        let valCli = c.secs[s].clis.size;
+                        
+                        let valClass = valSell === 0 ? 'text-danger fw-bold' : 'text-muted';
+                        trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(valSell)}</td>`; 
+                        
+                        let cliClass = valCli === 0 ? 'text-danger fw-bold' : 'text-muted fw-bold';
+                        trHtml += `<td class="text-center align-middle ${cliClass}">${formatNumber(valCli)}</td>`; 
+                    });
+                } else {
+                    modalCidDepts.forEach(d => { 
+                        let val = c.depts[d]; 
+                        let valClass = val === 0 ? 'text-danger fw-bold' : 'text-muted';
+                        trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(val)}</td>`; 
+                    });
+                }
+                 
                 trHtml += `<td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(c.sellout)}</td>`; 
                 
                 // Status da cidade com base na variavel statusVal: ✅ = 2 / ⚠️ = 1 / ❌ = 0
@@ -2377,7 +2477,11 @@
                 if(key === 'cid') return dir * a.cid.localeCompare(b.cid); 
                 if(key === 'sellout') return dir * (a.sellout - b.sellout); 
                 if(key === 'status') return dir * (a.statusVal - b.statusVal); 
+                
                 if(key.startsWith('dept_')) return dir * (a.depts[key.replace('dept_', '')] - b.depts[key.replace('dept_', '')]); 
+                if(key.startsWith('sec_sell_')) return dir * (a.secs[key.replace('sec_sell_', '')].sellout - b.secs[key.replace('sec_sell_', '')].sellout); 
+                if(key.startsWith('sec_cli_')) return dir * (a.secs[key.replace('sec_cli_', '')].clis.size - b.secs[key.replace('sec_cli_', '')].clis.size); 
+                
                 return 0; 
             }); 
             sortCidModalDir[key] *= -1; 
@@ -2405,23 +2509,45 @@
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
             const cids = getCustomSelectValues('filter-cidade');
+            const secs = getCustomSelectValues('filter-secao');
 
             const dadosExclusivosMetas = globalData.filter(row => {
                 return (!tipoVenda || row.TIPO_VENDA === tipoVenda) && 
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
-                       (cids.length === 0 || cids.includes(row.CIDADE));
+                       (cids.length === 0 || cids.includes(row.CIDADE)) &&
+                       (secs.length === 0 || secs.includes(row.SECAO_NORM));
             });
 
-            dadosExclusivosMetas.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
+            // LIGAÇÃO DA TABELA DE METAS COM O FILTRO DE SEÇÃO
+            let metaCatAtiva = currentMetaCategory;
+            if (metaCatAtiva === 'TT') {
+                if (secs.length === 1) metaCatAtiva = secs[0];
+                else if (depts.length === 1) metaCatAtiva = depts[0];
+            }
+
+            dadosExclusivosMetas.forEach(r => { 
+                if (metaCatAtiva !== 'TT') {
+                    if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva) return; 
+                }
+                if(rMes[r.MES_EXTRATO]) { 
+                    rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
+                    if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
+                } 
+            });
             
-            let qKey = getMetaKey(currentMetaCategory), lM = mesesOrdenados.map(m => nomeMeses[m]);
+            let qKey = getMetaKey(metaCatAtiva), lM = mesesOrdenados.map(m => nomeMeses[m]);
             const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0), rSArr = mesesOrdenados.map(m => rMes[m].sell);
             const mCArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].cobertura : 0), rCArr = mesesOrdenados.map(m => rMes[m].clis.size);
             
             let uniqueDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
-            let cGraf = currentMetaCategory!=='TT' ? getDeptColor(currentMetaCategory, uniqueDepts.indexOf(currentMetaCategory)) : coresPadrao.DEFAULT;
+            let cGraf = metaCatAtiva !== 'TT' ? getDeptColor(metaCatAtiva, uniqueDepts.indexOf(metaCatAtiva)) : coresPadrao.DEFAULT;
+
+            const catNameText = metaCatAtiva === 'TT' ? 'TOTAL GERAL' : metaCatAtiva;
+            document.getElementById('title-table-metas').innerText = `Detalhamento Mensal de Metas (${catNameText})`;
+            document.getElementById('title-chart-meta-sellout').innerText = `Acompanhamento Sell Out: Meta vs Realizado (${catNameText})`;
+            document.getElementById('title-chart-meta-cob').innerText = `Acompanhamento Cobertura: Meta vs Realizado (${catNameText})`;
 
             // Gráficos de Metas com LEGENDA NO TOPO
             createOrUpdateChart('chartMetaSellOut', 'bar', { labels: lM, datasets: [ { label: 'Meta (R$)', type: 'line', data: mSArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false }, { label: 'Realizado (R$)', data: rSArr, backgroundColor: cGraf, borderRadius: 4 } ] }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } });
@@ -2495,10 +2621,14 @@
                     const fMesStr = fMes ? `${nomeMesesCompleto[fMes]} / 2026` : 'Todos (Acumulado)';
                     const fSups = getCustomSelectValues('filter-supervisor');
                     const fVends = getCustomSelectValues('filter-vendedor');
+                    const fDepts = getCustomSelectValues('filter-departamento');
+                    const fSecs = getCustomSelectValues('filter-secao');
                     
                     let strFiltros = `Filtros: Tipo (${fTipo}) | Mês (${fMesStr})`;
                     if(fSups.length > 0) strFiltros += ` | Sup (${fSups.join(', ')})`;
                     if(fVends.length > 0) strFiltros += ` | Vend (${fVends.join(', ')})`;
+                    if(fDepts.length > 0) strFiltros += ` | Dept (${fDepts.join(', ')})`;
+                    if(fSecs.length > 0) strFiltros += ` | Seç (${fSecs.join(', ')})`;
                     if(strFiltros.length > 140) strFiltros = strFiltros.substring(0, 137) + '...';
 
                     doc.setFontSize(9);
@@ -2543,20 +2673,44 @@
                             cleanCurrencyForPDF(p.sellout)
                         ]);
                     } else if (type === 'cidades') {
-                        head = [['Posição', 'Cidade', ...modalCidDepts.map(d => d + ' (R$)'), 'Total (R$)', 'Status']];
-                        body = modalCidData.map((c, index) => {
-                            let statusStr = '';
-                            if (c.statusVal === 2) statusStr = 'OK';
-                            else if (c.statusVal === 0) statusStr = 'Zerado';
-                            else statusStr = 'Alerta';
-                            return [
-                                `${index + 1}º`,
-                                c.cid,
-                                ...modalCidDepts.map(d => cleanCurrencyForPDF(c.depts[d])),
-                                cleanCurrencyForPDF(c.sellout),
-                                statusStr
-                            ];
-                        });
+                        if (isModalCidSecaoMode) {
+                            let headRow = ['Posição', 'Cidade'];
+                            modalCidSecs.forEach(s => { headRow.push(`${s} (R$)`); headRow.push(`Posit. ${s}`); });
+                            headRow.push('Total (R$)');
+                            headRow.push('Status');
+                            head = [headRow];
+
+                            body = modalCidData.map((c, index) => {
+                                let statusStr = '';
+                                if (c.statusVal === 2) statusStr = 'OK';
+                                else if (c.statusVal === 0) statusStr = 'Zerado';
+                                else statusStr = 'Alerta';
+                                
+                                let rowData = [`${index + 1}º`, c.cid];
+                                modalCidSecs.forEach(s => {
+                                    rowData.push(cleanCurrencyForPDF(c.secs[s].sellout));
+                                    rowData.push(formatNumber(c.secs[s].clis.size));
+                                });
+                                rowData.push(cleanCurrencyForPDF(c.sellout));
+                                rowData.push(statusStr);
+                                return rowData;
+                            });
+                        } else {
+                            head = [['Posição', 'Cidade', ...modalCidDepts.map(d => d + ' (R$)'), 'Total (R$)', 'Status']];
+                            body = modalCidData.map((c, index) => {
+                                let statusStr = '';
+                                if (c.statusVal === 2) statusStr = 'OK';
+                                else if (c.statusVal === 0) statusStr = 'Zerado';
+                                else statusStr = 'Alerta';
+                                return [
+                                    `${index + 1}º`,
+                                    c.cid,
+                                    ...modalCidDepts.map(d => cleanCurrencyForPDF(c.depts[d])),
+                                    cleanCurrencyForPDF(c.sellout),
+                                    statusStr
+                                ];
+                            });
+                        }
                     }
 
                     doc.autoTable({
