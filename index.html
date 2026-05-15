@@ -1066,8 +1066,22 @@
         }
 
         function getMetaKey(requestedCat) {
-            if (requestedCat === 'TT') return 'TT';
-            const stdCat = standardizeString(requestedCat);
+            if (!requestedCat || requestedCat === 'TT') return 'TT';
+            
+            let catForMeta = String(requestedCat).toUpperCase().trim();
+            
+            // --- REGRA ESPECÍFICA DE MAPEAMENTO (FORÇA A META CORRETA) ---
+            if (catForMeta.startsWith('GSA - MAC')) {
+                catForMeta = 'GSA - MAC';
+            } else if (catForMeta.startsWith('GSA - REFRESKANT')) {
+                catForMeta = 'GSA - REFRESKANT';
+            } else if (catForMeta.includes('DONA RAIZ')) {
+                catForMeta = 'P1-GSA - DONA RAIZ';
+            } else if (catForMeta.includes('VELLY')) {
+                catForMeta = 'P1-GSA - VELLY/PPA';
+            }
+
+            const stdCat = standardizeString(catForMeta);
             
             for (let m of mesesOrdenados) {
                 if (metasDinamicas[m]) {
@@ -1664,9 +1678,20 @@
             }
 
             const ticketMedio = clientesSet.size > 0 ? totalSellOut / clientesSet.size : 0;
+            
             let metaCatToUse = 'TT';
             const deptFilterArray = getCustomSelectValues('filter-departamento');
-            if (deptFilterArray.length === 1) { metaCatToUse = deptFilterArray[0]; }
+            const secFilterArray = getCustomSelectValues('filter-secao');
+            
+            if (secFilterArray.length === 1) { 
+                metaCatToUse = secFilterArray[0]; 
+            } else if (secFilterArray.length > 1 && secFilterArray.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
+                metaCatToUse = 'GSA - MAC';
+            } else if (secFilterArray.length > 1 && secFilterArray.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
+                metaCatToUse = 'GSA - REFRESKANT';
+            } else if (deptFilterArray.length === 1) { 
+                metaCatToUse = deptFilterArray[0]; 
+            }
 
             let queryKeyKpi = getMetaKey(metaCatToUse);
 
@@ -1908,13 +1933,23 @@
 
             let metaCatVisaoGeral = 'TT';
             const deptFilterValArray = getCustomSelectValues('filter-departamento');
-            if (deptFilterValArray.length === 1) { metaCatVisaoGeral = deptFilterValArray[0]; }
+            const secFilterValArray = getCustomSelectValues('filter-secao');
+            
+            if (secFilterValArray.length === 1) { 
+                metaCatVisaoGeral = secFilterValArray[0]; 
+            } else if (secFilterValArray.length > 1 && secFilterValArray.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
+                metaCatVisaoGeral = 'GSA - MAC';
+            } else if (secFilterValArray.length > 1 && secFilterValArray.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
+                metaCatVisaoGeral = 'GSA - REFRESKANT';
+            } else if (deptFilterValArray.length === 1) { 
+                metaCatVisaoGeral = deptFilterValArray[0]; 
+            }
 
             let queryKeyVisao = getMetaKey(metaCatVisaoGeral);
 
             const realMensalArr = mesesOrdenados.map(m => {
-                if (metaCatVisaoGeral === 'TT') return departamentosUnicos.reduce((sum, d) => sum + evoMensal[m][d], 0);
-                return evoMensal[m][metaCatVisaoGeral] || 0;
+                // Soma total do mês a partir dos dados já filtrados (cobre Depts e Seções perfeitamente)
+                return departamentosUnicos.reduce((sum, d) => sum + (evoMensal[m][d] || 0), 0);
             });
             const metaMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].sellout : 0);
             const metaCobMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].cobertura : 0);
@@ -2028,18 +2063,18 @@
             // Lógica de Título Dinâmico Refinada
             const mes = document.getElementById('filter-mes').value;
             const depts = getCustomSelectValues('filter-departamento');
+            const secs = getCustomSelectValues('filter-secao');
             
             let titleText = 'Tabela de Supervisores';
+            let strFiltrosArray = [];
             
-            if (mes && depts.length > 0) {
-                titleText += ` - ${nomeMesesCompleto[mes]} / 2026 - ${depts.join(', ')}`;
-            } else if (mes) {
-                titleText += ` - ${nomeMesesCompleto[mes]} / 2026`;
-            } else if (depts.length > 0) {
-                titleText += ` - Geral - ${depts.join(', ')}`;
-            } else {
-                titleText += ' - Geral';
-            }
+            if (mes) strFiltrosArray.push(`${nomeMesesCompleto[mes]} / 2026`);
+            else strFiltrosArray.push('Geral');
+            
+            if (depts.length > 0) strFiltrosArray.push(depts.join(', '));
+            if (secs.length > 0) strFiltrosArray.push(secs.join(', '));
+            
+            titleText += ` - ${strFiltrosArray.join(' - ')}`;
 
             const titleEl = document.getElementById('title-supervisores');
             if (titleEl) {
@@ -2523,13 +2558,23 @@
             // LIGAÇÃO DA TABELA DE METAS COM O FILTRO DE SEÇÃO
             let metaCatAtiva = currentMetaCategory;
             if (metaCatAtiva === 'TT') {
-                if (secs.length === 1) metaCatAtiva = secs[0];
-                else if (depts.length === 1) metaCatAtiva = depts[0];
+                if (secs.length === 1) {
+                    metaCatAtiva = secs[0];
+                } else if (secs.length > 1 && secs.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
+                    metaCatAtiva = 'GSA - MAC';
+                } else if (secs.length > 1 && secs.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
+                    metaCatAtiva = 'GSA - REFRESKANT';
+                } else if (depts.length === 1) {
+                    metaCatAtiva = depts[0];
+                }
             }
 
             dadosExclusivosMetas.forEach(r => { 
                 if (metaCatAtiva !== 'TT') {
-                    if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva) return; 
+                    // Mapeia tanto por departamento como por seção
+                    let isMacGroup = metaCatAtiva.startsWith('GSA - MAC') && (r.DEPT_NORM.startsWith('GSA - MAC') || r.SECAO_NORM.startsWith('GSA - MAC'));
+                    let isRefGroup = metaCatAtiva.startsWith('GSA - REFRESKANT') && (r.DEPT_NORM.startsWith('GSA - REFRESKANT') || r.SECAO_NORM.startsWith('GSA - REFRESKANT'));
+                    if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva && !isMacGroup && !isRefGroup) return; 
                 }
                 if(rMes[r.MES_EXTRATO]) { 
                     rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
@@ -2872,6 +2917,25 @@
             }
 
             window.comparativoData = data;
+            
+            // Sincronizar as metas da Planilha de Categorias com as Metas Dinâmicas (KPIs)
+            const monthMapComp = { 'JANEIRO':'01', 'FEVEREIRO':'02', 'MARÇO':'03', 'MARCO':'03', 'ABRIL':'04', 'MAIO':'05', 'JUNHO':'06', 'JULHO':'07', 'AGOSTO':'08', 'SETEMBRO':'09', 'OUTUBRO':'10', 'NOVEMBRO':'11', 'DEZEMBRO':'12' };
+
+            ['Financeiro', 'Cobertura'].forEach(sec => {
+                for (let cat in data[sec]) {
+                    let internalKey = (cat === 'TOTAL GERAL') ? 'TT' : standardizeString(cat);
+                    data[sec][cat].forEach(d => {
+                        let m = monthMapComp[d.mes];
+                        if (m) {
+                            if (!metasDinamicas[m]) metasDinamicas[m] = {};
+                            if (!metasDinamicas[m][internalKey]) metasDinamicas[m][internalKey] = { sellout: 0, cobertura: 0 };
+                            
+                            if (sec === 'Financeiro') metasDinamicas[m][internalKey].sellout = d.m2026;
+                            if (sec === 'Cobertura') metasDinamicas[m][internalKey].cobertura = d.m2026;
+                        }
+                    });
+                }
+            });
             
             const selectCat = document.getElementById('comp-departamento-select');
             selectCat.innerHTML = '';
