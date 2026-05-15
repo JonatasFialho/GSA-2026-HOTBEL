@@ -2555,9 +2555,25 @@
                        (secs.length === 0 || secs.includes(row.SECAO_NORM));
             });
 
-            // LIGAÇÃO DA TABELA DE METAS COM O FILTRO DE SEÇÃO
-            let metaCatAtiva = currentMetaCategory;
-            if (metaCatAtiva === 'TT') {
+            let qKey;
+
+            // LIGAÇÃO DA TABELA DE METAS ISOLANDO OS BOTÕES DE DEPARTAMENTO
+            if (currentMetaCategory !== 'TT') {
+                // REGRA ORIGINAL PARA DEPARTAMENTOS: Filtra e puxa a meta ESTRITAMENTE do departamento.
+                dadosExclusivosMetas.forEach(r => { 
+                    if(r.DEPT_NORM !== currentMetaCategory) return; 
+                    if(rMes[r.MES_EXTRATO]) { 
+                        rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
+                        if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
+                    } 
+                });
+                
+                // Puxa a meta exata do departamento (como era lido da aba FINANCEIRO)
+                qKey = standardizeString(currentMetaCategory);
+                
+            } else {
+                // LÓGICA DINÂMICA DE HERANÇA (Apenas quando o botão selecionado for o TOTAL GERAL)
+                let metaCatAtiva = 'TT';
                 if (secs.length === 1) {
                     metaCatAtiva = secs[0];
                 } else if (secs.length > 1 && secs.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
@@ -2567,29 +2583,32 @@
                 } else if (depts.length === 1) {
                     metaCatAtiva = depts[0];
                 }
-            }
 
-            dadosExclusivosMetas.forEach(r => { 
-                if (metaCatAtiva !== 'TT') {
-                    // Mapeia tanto por departamento como por seção
-                    let isMacGroup = metaCatAtiva.startsWith('GSA - MAC') && (r.DEPT_NORM.startsWith('GSA - MAC') || r.SECAO_NORM.startsWith('GSA - MAC'));
-                    let isRefGroup = metaCatAtiva.startsWith('GSA - REFRESKANT') && (r.DEPT_NORM.startsWith('GSA - REFRESKANT') || r.SECAO_NORM.startsWith('GSA - REFRESKANT'));
-                    if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva && !isMacGroup && !isRefGroup) return; 
-                }
-                if(rMes[r.MES_EXTRATO]) { 
-                    rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
-                    if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
-                } 
-            });
+                dadosExclusivosMetas.forEach(r => { 
+                    if (metaCatAtiva !== 'TT') {
+                        let isMacGroup = metaCatAtiva.startsWith('GSA - MAC') && (r.DEPT_NORM.startsWith('GSA - MAC') || r.SECAO_NORM.startsWith('GSA - MAC'));
+                        let isRefGroup = metaCatAtiva.startsWith('GSA - REFRESKANT') && (r.DEPT_NORM.startsWith('GSA - REFRESKANT') || r.SECAO_NORM.startsWith('GSA - REFRESKANT'));
+                        if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva && !isMacGroup && !isRefGroup) return; 
+                    }
+                    if(rMes[r.MES_EXTRATO]) { 
+                        rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
+                        if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
+                    } 
+                });
+                
+                qKey = getMetaKey(metaCatAtiva);
+            }
             
-            let qKey = getMetaKey(metaCatAtiva), lM = mesesOrdenados.map(m => nomeMeses[m]);
-            const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0), rSArr = mesesOrdenados.map(m => rMes[m].sell);
-            const mCArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].cobertura : 0), rCArr = mesesOrdenados.map(m => rMes[m].clis.size);
+            let lM = mesesOrdenados.map(m => nomeMeses[m]);
+            const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0);
+            const rSArr = mesesOrdenados.map(m => rMes[m].sell);
+            const mCArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].cobertura : 0);
+            const rCArr = mesesOrdenados.map(m => rMes[m].clis.size);
             
             let uniqueDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
-            let cGraf = metaCatAtiva !== 'TT' ? getDeptColor(metaCatAtiva, uniqueDepts.indexOf(metaCatAtiva)) : coresPadrao.DEFAULT;
+            let cGraf = currentMetaCategory !== 'TT' ? getDeptColor(currentMetaCategory, uniqueDepts.indexOf(currentMetaCategory)) : coresPadrao.DEFAULT;
 
-            const catNameText = metaCatAtiva === 'TT' ? 'TOTAL GERAL' : metaCatAtiva;
+            const catNameText = currentMetaCategory === 'TT' ? 'TOTAL GERAL' : currentMetaCategory;
             document.getElementById('title-table-metas').innerText = `Detalhamento Mensal de Metas (${catNameText})`;
             document.getElementById('title-chart-meta-sellout').innerText = `Acompanhamento Sell Out: Meta vs Realizado (${catNameText})`;
             document.getElementById('title-chart-meta-cob').innerText = `Acompanhamento Cobertura: Meta vs Realizado (${catNameText})`;
@@ -2923,7 +2942,11 @@
 
             ['Financeiro', 'Cobertura'].forEach(sec => {
                 for (let cat in data[sec]) {
-                    let internalKey = (cat === 'TOTAL GERAL') ? 'TT' : standardizeString(cat);
+                    // REGRA CRUCIAL: Ignorar o TOTAL GERAL vindo da aba de Categorias.
+                    // Isso evita que a meta duplique nos KPIs, pois o total já é puxado da aba FINANCEIRO original.
+                    if (cat === 'TOTAL GERAL') continue;
+
+                    let internalKey = standardizeString(cat);
                     data[sec][cat].forEach(d => {
                         let m = monthMapComp[d.mes];
                         if (m) {
