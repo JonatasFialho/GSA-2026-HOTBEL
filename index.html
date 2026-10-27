@@ -395,7 +395,7 @@
                 <img src="https://static.wixstatic.com/media/8e557f_945dc653107343cbbb2f3012f61e08ed~mv2.png" alt="Logo GSA" style="height: 45px; width: auto;">
                 <div>
                     <h4 class="m-0" style="font-weight: 700; color: var(--header-title-color); transition: color 0.3s;">DASHBOARD COMERCIAL</h4>
-                    <small style="color: var(--header-subtext-color) !important; transition: color 0.3s;">Acompanhamento Philipe Macau</small>
+                    <small style="color: var(--header-subtext-color) !important; transition: color 0.3s;">Acompanhamento de Vendas e Metas GSA</small>
                 </div>
             </div>
             <div class="header-action-btns d-flex flex-wrap justify-content-center align-items-center gap-2">
@@ -411,10 +411,15 @@
                     </ul>
                 </div>
                 
-                <!-- BOTÃO APPS SCRIPT -->
-                <button class="btn text-white shadow-sm" onclick="syncFromGoogleDriveScript()" style="background-color: #009e5f; border-radius: 8px; font-weight: 600; border: none; transition: all 0.3s; padding: 0.5rem 1rem;">
-                    <i class="fab fa-google-drive me-2"></i> Extrair via Script
-                </button>
+                <!-- BOTÃO APPS SCRIPT COM CONFIGURAÇÃO -->
+                <div class="btn-group shadow-sm">
+                    <button class="btn text-white" onclick="syncFromGoogleDriveScript()" style="background-color: #009e5f; border-radius: 8px 0 0 8px; font-weight: 600; border: none; transition: all 0.3s; padding: 0.5rem 1rem;">
+                        <i class="fab fa-google-drive me-2"></i> Extrair via Script
+                    </button>
+                    <button class="btn text-white" onclick="openScriptConfigModal()" title="Configurar URL do Google Apps Script" style="background-color: #008751; border-radius: 0 8px 8px 0; border: none; padding: 0.5rem 0.75rem;">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
 
                 <!-- BOTÃO UPLOAD LOCAL -->
                 <div class="upload-btn-wrapper">
@@ -499,11 +504,6 @@
                             <div class="col">
                                 <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">CIDADE</label>
                                 <div id="filter-cidade"></div>
-                            </div>
-                            <!-- NOVO FILTRO DE SEÇÃO -->
-                            <div class="col">
-                                <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.75rem;">SEÇÃO</label>
-                                <div id="filter-secao"></div>
                             </div>
                         </div>
                     </div>
@@ -615,37 +615,11 @@
                         </div>
                     </div>
 
-                    <!-- Nova Tabela de Supervisores -->
-                    <div class="table-custom-wrapper mb-4">
-                        <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <span id="title-supervisores">Tabela de Supervisores - Geral</span>
-                            <button class="btn btn-sm btn-outline-primary" onclick="exportSupervisoresToCSV('Desempenho_Supervisores.csv')"><i class="fas fa-download"></i> Exportar</button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-custom" id="supervisores-table">
-                                <thead>
-                                    <tr>
-                                        <th class="ps-4">Posição</th>
-                                        <th style="cursor: pointer;" onclick="sortSupTable(0)">Supervisor <i class="fas fa-sort ms-1"></i></th>
-                                        <th style="cursor: pointer;" onclick="sortSupTable(1)" class="text-end">Positivação Geral <i class="fas fa-sort ms-1"></i></th>
-                                        <th style="cursor: pointer;" onclick="sortSupTable(2)" class="text-end">Volume Geral <i class="fas fa-sort ms-1"></i></th>
-                                        <th style="cursor: pointer;" onclick="sortSupTable(3)" class="text-end pe-4">Sell Out Geral (R$) <i class="fas fa-sort ms-1"></i></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-supervisores-body"></tbody>
-                                <tfoot id="table-supervisores-foot"></tfoot>
-                            </table>
-                        </div>
-                    </div>
-
                     <!-- Tabela Analítica -->
                     <div class="table-custom-wrapper">
                         <div class="chart-title mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                             <span>Tabela Analítica - Desempenho de Cidades</span>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-primary" onclick="showCidadesModal()"><i class="fas fa-list me-1"></i> Ver Detalhes</button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('Tabela_Analitica.csv')"><i class="fas fa-download"></i> Exportar</button>
-                            </div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV('Tabela_Analitica.csv')"><i class="fas fa-download"></i> Exportar</button>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover table-custom" id="analytical-table">
@@ -797,7 +771,6 @@
         </div>
     </div>
 
-    <!-- MODAL PRODUTOS -->
     <div class="modal fade" id="modalProdutos" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
             <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
@@ -816,42 +789,14 @@
                             <thead>
                                 <tr>
                                     <th class="ps-4">Posição</th>
-                                    <th onclick="sortProdModalTable('prod')" style="cursor:pointer">Produto / SKU <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('dept')" style="cursor:pointer">Departamento <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('clientes')" style="cursor:pointer">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-center" onclick="sortProdModalTable('qtd')" style="cursor:pointer">Qtd Vendida <i class="fas fa-sort ms-1"></i></th>
-                                    <th class="text-end pe-4" onclick="sortProdModalTable('sellout')" style="cursor:pointer">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
+                                    <th onclick="sortProdModalTable('prod')">Produto / SKU <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('dept')">Departamento <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('clientes')">Clientes Posit. <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-center" onclick="sortProdModalTable('qtd')">Qtd Vendida <i class="fas fa-sort ms-1"></i></th>
+                                    <th class="text-end pe-4" onclick="sortProdModalTable('sellout')">Sell Out (R$) <i class="fas fa-sort ms-1"></i></th>
                                 </tr>
                             </thead>
                             <tbody id="modal-produtos-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- NOVO MODAL: RANKING DE CIDADES -->
-    <div class="modal fade" id="modalCidades" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-custom-width">
-            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
-                <div class="modal-header align-items-center" style="border-bottom: 1px solid var(--border-color);">
-                    <h5 class="modal-title m-0" style="color: var(--text-dark); font-weight: bold;"><i class="fas fa-city me-2 text-info"></i> Ranking de Cidades</h5>
-                    <div class="ms-auto d-flex gap-2 align-items-center">
-                        <button type="button" class="btn btn-sm btn-danger shadow-sm fw-bold" onclick="exportModalToPDF(event, 'cidades')">
-                            <i class="fas fa-file-pdf me-1"></i> Gerar PDF
-                        </button>
-                        <button type="button" class="btn-close m-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                </div>
-                <div class="modal-body p-0" id="pdf-cidades-container">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-custom m-0">
-                            <thead id="modal-cidades-head"></thead>
-                            <tbody id="modal-cidades-body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -872,6 +817,82 @@
                 <div class="modal-body text-dark py-4" id="customAlertMessage"></div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configuração Apps Script -->
+    <div class="modal fade" id="modalScriptConfig" tabindex="-1" aria-labelledby="modalScriptConfigLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background-color: var(--card-bg); border: 1px solid var(--border-color);">
+                <div class="modal-header border-0 bg-primary text-white" style="border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title fs-6 fw-bold" id="modalScriptConfigLabel"><i class="fab fa-google-drive me-2"></i>Integração Google Apps Script</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body text-dark py-3">
+                    <label class="form-label fw-bold small text-muted mb-1">URL DO APLICATIVO DA WEB (/exec):</label>
+                    <textarea class="form-control font-monospace mb-3" id="input-apps-script-url" rows="2" style="font-size: 0.8rem;" placeholder="https://script.google.com/macros/s/.../exec"></textarea>
+
+                    <div class="alert alert-warning border-0 p-3 small mb-3">
+                        <div class="fw-bold mb-1"><i class="fas fa-microchip me-1"></i> Evitar erro de memória (Out of memory error) no Apps Script:</div>
+                        O Google Apps Script tem limite de 50MB de memória. Se houver muitos arquivos ou arquivos temporários na pasta do Drive, o script da Google falha. Utilize o código otimizado abaixo no seu Apps Script:
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-muted">CÓDIGO OTIMIZADO PARA O GOOGLE APPS SCRIPT:</span>
+                        <button class="btn btn-sm btn-outline-primary" type="button" onclick="copyOptimizedScriptCode()">
+                            <i class="fas fa-copy me-1"></i> Copiar Código
+                        </button>
+                    </div>
+                    <pre class="bg-light p-2 rounded border small text-dark" style="max-height: 180px; overflow-y: auto; font-size: 0.75rem;" id="code-optimized-script">function doGet(e) {
+  var folderId = '1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI';
+  var folder = DriveApp.getFolderById(folderId);
+  var files = folder.getFiles();
+  var fileContents = [];
+
+  while (files.hasNext()) {
+    var file = files.next();
+    var name = file.getName();
+    var upper = name.toUpperCase();
+    
+    // Ignora arquivos temporários (~$...) ou maiores que 15MB para não estourar RAM
+    if (name.indexOf('~$') === 0 || file.getSize() > 15 * 1024 * 1024) continue;
+    
+    var isExcel = upper.endsWith('.XLSX') || upper.endsWith('.XLS');
+    var isCsv = upper.endsWith('.CSV');
+    var isRelevant = upper.indexOf('VENDID') > -1 || upper.indexOf('FATURAD') > -1 || 
+                     upper.indexOf('META') > -1 || upper.indexOf('CATEGORIA') > -1 ||
+                     upper.indexOf('FINANC') > -1 || upper.indexOf('POSITIV') > -1 || upper.indexOf('COBERTUR') > -1;
+
+    if (!isExcel && !isCsv) continue;
+    if (!isRelevant) continue;
+
+    if (isCsv) {
+      fileContents.push({
+        name: name,
+        type: 'csv',
+        content: file.getBlob().getDataAsString("ISO-8859-1")
+      });
+    } else if (isExcel) {
+      fileContents.push({
+        name: name,
+        type: 'excel',
+        content: Utilities.base64Encode(file.getBlob().getBytes())
+      });
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(fileContents))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                </div>
+                <div class="modal-footer border-0 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetScriptConfig()">Restaurar Padrão</button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="saveScriptConfig()">Salvar e Sincronizar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1039,7 +1060,55 @@
         */
         // ==========================================================================================
 
-        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2AuxULBQcC4H6uPfgt8lZ5hOcdUzZgKabYnlX8xuU_PZy4pkaNSiFG2tLkl-Lc98z/exec'; 
+        const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbJipWiEVrgYqGLKuERcUVjq3Gk68vWNsNAlkS5zTHl8rBFna_RVoYqC1M3GMgznX6m_Q/exec';
+        function getAppsScriptUrl() {
+            const saved = localStorage.getItem('APPS_SCRIPT_URL');
+            // Se tiver salvo a URL antiga anterior, substitui automaticamente pela nova URL padrão fixa
+            if (saved && saved.includes('AKfycbxpiWiHGAkidy4APu4Bm9B1wNFXXsmOTw8IrZ87E8QDPAYZ5dFIXr7nEI_yEADO2-Tn')) {
+                localStorage.removeItem('APPS_SCRIPT_URL');
+                return DEFAULT_APPS_SCRIPT_URL;
+            }
+            return saved || DEFAULT_APPS_SCRIPT_URL;
+        }
+
+        function openScriptConfigModal() {
+            const input = document.getElementById('input-apps-script-url');
+            if (input) input.value = getAppsScriptUrl();
+            const modal = new bootstrap.Modal(document.getElementById('modalScriptConfig'));
+            modal.show();
+        }
+
+        function saveScriptConfig() {
+            const input = document.getElementById('input-apps-script-url');
+            if (input) {
+                const val = input.value.trim();
+                if (val) {
+                    localStorage.setItem('APPS_SCRIPT_URL', val);
+                } else {
+                    localStorage.removeItem('APPS_SCRIPT_URL');
+                }
+            }
+            const modalEl = document.getElementById('modalScriptConfig');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            syncFromGoogleDriveScript();
+        }
+
+        function resetScriptConfig() {
+            localStorage.removeItem('APPS_SCRIPT_URL');
+            const input = document.getElementById('input-apps-script-url');
+            if (input) input.value = DEFAULT_APPS_SCRIPT_URL;
+        }
+
+        function copyOptimizedScriptCode() {
+            const codeEl = document.getElementById('code-optimized-script');
+            if (!codeEl) return;
+            navigator.clipboard.writeText(codeEl.innerText).then(() => {
+                customAlert("Código copiado com sucesso! Agora vá ao editor do Google Apps Script, cole este código, clique em Implantar > Gerenciar implantações > Editar > Nova versão > Implantar.");
+            }).catch(() => {
+                customAlert("Selecione o código na caixa de texto e copie com Ctrl+C.");
+            });
+        } 
 
         const coresPadrao = { LIM: '#e74c3c', HIG: '#00cec9', BEL: '#fd79a8', DEFAULT: '#0f4c81' };
         const mesesOrdenados = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
@@ -1066,22 +1135,8 @@
         }
 
         function getMetaKey(requestedCat) {
-            if (!requestedCat || requestedCat === 'TT') return 'TT';
-            
-            let catForMeta = String(requestedCat).toUpperCase().trim();
-            
-            // --- REGRA ESPECÍFICA DE MAPEAMENTO (FORÇA A META CORRETA) ---
-            if (catForMeta.startsWith('GSA - MAC')) {
-                catForMeta = 'GSA - MAC';
-            } else if (catForMeta.startsWith('GSA - REFRESKANT')) {
-                catForMeta = 'GSA - REFRESKANT';
-            } else if (catForMeta.includes('DONA RAIZ')) {
-                catForMeta = 'P1-GSA - DONA RAIZ';
-            } else if (catForMeta.includes('VELLY')) {
-                catForMeta = 'P1-GSA - VELLY/PPA';
-            }
-
-            const stdCat = standardizeString(catForMeta);
+            if (requestedCat === 'TT') return 'TT';
+            const stdCat = standardizeString(requestedCat);
             
             for (let m of mesesOrdenados) {
                 if (metasDinamicas[m]) {
@@ -1149,21 +1204,63 @@
         }
 
         async function syncFromGoogleDriveScript() {
-            if (!GOOGLE_APPS_SCRIPT_URL) {
+            const currentScriptUrl = getAppsScriptUrl();
+            if (!currentScriptUrl) {
                 customAlert("O link do Apps Script não foi configurado."); return;
             }
 
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "A conectar ao Google Drive...";
+            document.getElementById('loading-subtext').innerText = "Isto pode levar alguns segundos dependendo do volume de dados.";
 
             try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
-                const data = await response.json();
+                let data = null;
+                let proxyErrorMsg = null;
+
+                // 1ª Tentativa: Via Proxy Express do Servidor (/api/sync-drive)
+                // Evita problemas de CORS, restrições de sandbox em iframe e segue os redirects do Apps Script
+                try {
+                    const proxyUrl = '/api/sync-drive?url=' + encodeURIComponent(currentScriptUrl);
+                    const proxyRes = await fetch(proxyUrl);
+                    if (proxyRes.ok) {
+                        data = await proxyRes.json();
+                        if (data && data.error) {
+                            throw new Error(data.error);
+                        }
+                    } else {
+                        const errJson = await proxyRes.json().catch(() => ({}));
+                        proxyErrorMsg = errJson.error || `Erro HTTP ${proxyRes.status}`;
+                    }
+                } catch (proxyErr) {
+                    console.warn("Proxy falhou ou indisponível, tentando chamada direta ao Apps Script...", proxyErr);
+                    proxyErrorMsg = proxyErr.message;
+                }
+
+                // 2ª Tentativa (Fallback): Chamada direta ao Google Apps Script caso o proxy não tenha retornado dados
+                if (!data) {
+                    try {
+                        const directRes = await fetch(currentScriptUrl, { method: 'GET', redirect: 'follow' });
+                        if (!directRes.ok) throw new Error(`Status HTTP ${directRes.status}`);
+                        data = await directRes.json();
+                    } catch (directErr) {
+                        console.error("Chamada direta também falhou:", directErr);
+                        const msg = "Não foi possível conectar ao Google Apps Script.\n\n" +
+                                    (proxyErrorMsg ? "Erro no Proxy: " + proxyErrorMsg + "\n" : "") +
+                                    "Erro Direto: " + directErr.message + "\n\n" +
+                                    "Checklist de solução:\n" +
+                                    "1. No Google Apps Script, ao alterar o código, clique em: Implantar > Gerenciar implantações > Editar > Nova versão > Implantar.\n" +
+                                    "2. Verifique se 'Quem tem acesso' está como 'Qualquer pessoa'.\n" +
+                                    "3. Se uma nova URL foi gerada, clique no ícone de engrenagem ao lado de 'Extrair via Script' e atualize a URL.";
+                        throw new Error(msg);
+                    }
+                }
 
                 if (!data || data.length === 0) {
-                    customAlert("A pasta do Drive está vazia ou o script não encontrou ficheiros.");
+                    customAlert("A pasta do Drive está vazia ou o script não encontrou ficheiros (.xlsx, .csv). Verifique se o ID da pasta (folderId) no Apps Script está correto.");
                     document.getElementById('loading-overlay').style.display = 'none'; return;
                 }
+
+                document.getElementById('loading-text').innerText = `A processar ${data.length} ficheiro(s) do Drive...`;
 
                 globalData = [];
                 initializeMetas(); 
@@ -1238,7 +1335,7 @@
                 });
 
             } catch (error) {
-                customAlert("Falha ao comunicar com o Google Apps Script.\nErro: " + error.message);
+                customAlert(error.message);
                 document.getElementById('loading-overlay').style.display = 'none';
             }
         }
@@ -1539,7 +1636,6 @@
             const vendedores = [...new Set(globalData.map(d => d.VENDEDOR).filter(Boolean))].sort();
             const departamentos = [...new Set(globalData.map(d => d.DEPT_NORM).filter(d => d !== 'OUTROS'))].sort();
             const cidades = [...new Set(globalData.map(d => d.CIDADE).filter(Boolean))].sort();
-            const secoes = [...new Set(globalData.map(d => d.SECAO_NORM).filter(Boolean))].sort();
 
             const selectMes = document.getElementById('filter-mes');
             selectMes.innerHTML = '<option value="">Todos (Acumulado)</option>';
@@ -1549,7 +1645,6 @@
             createCustomSelect('filter-vendedor', vendedores);
             createCustomSelect('filter-departamento', departamentos);
             createCustomSelect('filter-cidade', cidades);
-            createCustomSelect('filter-secao', secoes);
 
             selectMes.removeEventListener('change', applyFilters); selectMes.addEventListener('change', applyFilters);
             const selectTipo = document.getElementById('filter-tipo-venda');
@@ -1564,7 +1659,7 @@
             const tipoVendaEl = document.getElementById('filter-tipo-venda');
             if (tipoVendaEl) tipoVendaEl.value = 'VENDIDO';
             
-            ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade', 'filter-secao'].forEach(id => {
+            ['filter-supervisor', 'filter-vendedor', 'filter-departamento', 'filter-cidade'].forEach(id => {
                 const container = document.getElementById(id);
                 if(container) {
                     const cbTodos = container.querySelector('.cb-todos');
@@ -1588,7 +1683,6 @@
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
             const cids = getCustomSelectValues('filter-cidade');
-            const secs = getCustomSelectValues('filter-secao');
             
             let hasAnyFilter = false;
             
@@ -1625,7 +1719,6 @@
             checkCustomFilter('filter-vendedor', vends);
             checkCustomFilter('filter-departamento', depts);
             checkCustomFilter('filter-cidade', cids);
-            checkCustomFilter('filter-secao', secs);
 
             const btnClear = document.getElementById('btn-clear-filters');
             if(btnClear) {
@@ -1639,13 +1732,12 @@
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
-                       (cids.length === 0 || cids.includes(row.CIDADE)) &&
-                       (secs.length === 0 || secs.includes(row.SECAO_NORM));
+                       (cids.length === 0 || cids.includes(row.CIDADE));
             });
             updateDashboard();
         }
 
-        function updateDashboard() { calculateKPIs(); renderCharts(); renderSupervisoresTable(); renderTable(); renderMetas(); }
+        function updateDashboard() { calculateKPIs(); renderCharts(); renderTable(); renderMetas(); }
 
         function calculateKPIs() {
             let totalSellOut = 0; const clientesSet = new Set(), mesesFiltradosSet = new Set(), clientesPorMes = {};
@@ -1678,20 +1770,9 @@
             }
 
             const ticketMedio = clientesSet.size > 0 ? totalSellOut / clientesSet.size : 0;
-            
             let metaCatToUse = 'TT';
             const deptFilterArray = getCustomSelectValues('filter-departamento');
-            const secFilterArray = getCustomSelectValues('filter-secao');
-            
-            if (secFilterArray.length === 1) { 
-                metaCatToUse = secFilterArray[0]; 
-            } else if (secFilterArray.length > 1 && secFilterArray.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
-                metaCatToUse = 'GSA - MAC';
-            } else if (secFilterArray.length > 1 && secFilterArray.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
-                metaCatToUse = 'GSA - REFRESKANT';
-            } else if (deptFilterArray.length === 1) { 
-                metaCatToUse = deptFilterArray[0]; 
-            }
+            if (deptFilterArray.length === 1) { metaCatToUse = deptFilterArray[0]; }
 
             let queryKeyKpi = getMetaKey(metaCatToUse);
 
@@ -1933,23 +2014,13 @@
 
             let metaCatVisaoGeral = 'TT';
             const deptFilterValArray = getCustomSelectValues('filter-departamento');
-            const secFilterValArray = getCustomSelectValues('filter-secao');
-            
-            if (secFilterValArray.length === 1) { 
-                metaCatVisaoGeral = secFilterValArray[0]; 
-            } else if (secFilterValArray.length > 1 && secFilterValArray.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
-                metaCatVisaoGeral = 'GSA - MAC';
-            } else if (secFilterValArray.length > 1 && secFilterValArray.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
-                metaCatVisaoGeral = 'GSA - REFRESKANT';
-            } else if (deptFilterValArray.length === 1) { 
-                metaCatVisaoGeral = deptFilterValArray[0]; 
-            }
+            if (deptFilterValArray.length === 1) { metaCatVisaoGeral = deptFilterValArray[0]; }
 
             let queryKeyVisao = getMetaKey(metaCatVisaoGeral);
 
             const realMensalArr = mesesOrdenados.map(m => {
-                // Soma total do mês a partir dos dados já filtrados (cobre Depts e Seções perfeitamente)
-                return departamentosUnicos.reduce((sum, d) => sum + (evoMensal[m][d] || 0), 0);
+                if (metaCatVisaoGeral === 'TT') return departamentosUnicos.reduce((sum, d) => sum + evoMensal[m][d], 0);
+                return evoMensal[m][metaCatVisaoGeral] || 0;
             });
             const metaMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].sellout : 0);
             const metaCobMensalArr = mesesOrdenados.map(m => (metasDinamicas[m] && metasDinamicas[m][queryKeyVisao]) ? metasDinamicas[m][queryKeyVisao].cobertura : 0);
@@ -2054,155 +2125,15 @@
             });
         }
 
-        // ================= Tabela de Supervisores =================
-        let tableSupData = [];
-        let sortSupDirections = [1, 1, 1, 1];
-        let currentTotSupClientes = 0, currentTotSupVol = 0, currentTotSupSell = 0;
-
-        function renderSupervisoresTable() {
-            // Lógica de Título Dinâmico Refinada
-            const mes = document.getElementById('filter-mes').value;
-            const depts = getCustomSelectValues('filter-departamento');
-            const secs = getCustomSelectValues('filter-secao');
-            
-            let titleText = 'Tabela de Supervisores';
-            let strFiltrosArray = [];
-            
-            if (mes) strFiltrosArray.push(`${nomeMesesCompleto[mes]} / 2026`);
-            else strFiltrosArray.push('Geral');
-            
-            if (depts.length > 0) strFiltrosArray.push(depts.join(', '));
-            if (secs.length > 0) strFiltrosArray.push(secs.join(', '));
-            
-            titleText += ` - ${strFiltrosArray.join(' - ')}`;
-
-            const titleEl = document.getElementById('title-supervisores');
-            if (titleEl) {
-                titleEl.innerText = titleText;
-            }
-
-            const mapSups = new Map();
-            const totalClientes = new Set();
-            currentTotSupVol = 0;
-            currentTotSupSell = 0;
-
-            filteredData.forEach(row => {
-                const sup = row.SUPERVISOR;
-                if (!mapSups.has(sup)) {
-                    mapSups.set(sup, { sup: sup, sellout: 0, volume: 0, clientes: new Set() });
-                }
-                const entry = mapSups.get(sup);
-                
-                entry.sellout += row.VLFAT_NUM;
-                entry.volume += row.QTD_NUM;
-                if (row.CODCLI) {
-                    entry.clientes.add(row.CODCLI);
-                    totalClientes.add(row.CODCLI);
-                }
-                
-                currentTotSupSell += row.VLFAT_NUM;
-                currentTotSupVol += row.QTD_NUM;
-            });
-
-            currentTotSupClientes = totalClientes.size;
-
-            tableSupData = Array.from(mapSups.values()).map(v => ({
-                sup: v.sup,
-                clientes: v.clientes.size,
-                volume: v.volume,
-                sellout: v.sellout
-            })).sort((a,b) => b.sellout - a.sellout);
-
-            buildSupTableHTML();
-        }
-
-        function buildSupTableHTML() {
-            const tbody = document.getElementById('table-supervisores-body');
-            const tfoot = document.getElementById('table-supervisores-foot');
-            tbody.innerHTML = '';
-            
-            tableSupData.forEach((row, index) => {
-                const tr = document.createElement('tr');
-                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`;
-                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; 
-                else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; 
-                else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`;
-                
-                tr.innerHTML = `
-                    <td class="ps-4 align-middle">${posBadge}</td>
-                    <td class="align-middle fw-bold">${row.sup}</td>
-                    <td class="text-end align-middle">${formatNumber(row.clientes)}</td>
-                    <td class="text-end align-middle">${formatNumber(row.volume)}</td>
-                    <td class="text-end fw-bold text-primary align-middle pe-4">${formatCurrency(row.sellout)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            tfoot.innerHTML = `
-                <tr class="table-light fw-bold" style="font-size: 1.05rem;">
-                    <td colspan="2" class="ps-4 text-end">TOTAL GERAL</td>
-                    <td class="text-end">${formatNumber(currentTotSupClientes)}</td>
-                    <td class="text-end">${formatNumber(currentTotSupVol)}</td>
-                    <td class="text-end text-primary pe-4">${formatCurrency(currentTotSupSell)}</td>
-                </tr>
-            `;
-        }
-
-        function sortSupTable(columnIndex) {
-            const keys = ['sup', 'clientes', 'volume', 'sellout'];
-            const key = keys[columnIndex];
-            const dir = sortSupDirections[columnIndex];
-            
-            tableSupData.sort((a, b) => {
-                if (typeof a[key] === 'string') return dir * a[key].localeCompare(b[key]);
-                return dir * (a[key] - b[key]);
-            });
-            
-            sortSupDirections[columnIndex] *= -1;
-            buildSupTableHTML();
-        }
-        // =================================================================
-
         let tableData = [];
         function renderTable() {
-            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
-            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : '';
-            const sups = getCustomSelectValues('filter-supervisor');
-            const vends = getCustomSelectValues('filter-vendedor');
-
             const mapCidades = new Map();
-            
-            // 1. Monta a base fixa de Cidades e Supervisores (Ignorando filtro de Mês, Departamento e Seção)
-            // Considera apenas a base global filtrada por Tipo de Venda, Supervisor e Vendedor
-            globalData.forEach(row => {
-                if (tipoVenda && row.TIPO_VENDA !== tipoVenda) return;
-                if (sups.length > 0 && !sups.includes(row.SUPERVISOR)) return;
-                if (vends.length > 0 && !vends.includes(row.VENDEDOR)) return;
-                
-                const sup = row.SUPERVISOR, cid = row.CIDADE, key = sup + '|' + cid;
-                if (!mapCidades.has(key)) {
-                    mapCidades.set(key, { sup, cid, sellout: 0, clientes: new Set() });
-                }
-            });
-
-            // 2. Preenche os valores numéricos com base na tabela totalmente filtrada (incluindo Mês, etc.)
             filteredData.forEach(row => {
                 const sup = row.SUPERVISOR, cid = row.CIDADE, key = sup + '|' + cid;
-                if (mapCidades.has(key)) {
-                    const entry = mapCidades.get(key);
-                    entry.sellout += row.VLFAT_NUM;
-                    if (row.CODCLI) entry.clientes.add(row.CODCLI);
-                }
+                if (!mapCidades.has(key)) mapCidades.set(key, { sup, cid, sellout: 0, clientes: new Set() });
+                const entry = mapCidades.get(key); entry.sellout += row.VLFAT_NUM; if (row.CODCLI) entry.clientes.add(row.CODCLI);
             });
-
-            tableData = Array.from(mapCidades.values()).map(v => ({ 
-                sup: v.sup, 
-                cid: v.cid, 
-                clientes: v.clientes.size, 
-                sellout: v.sellout, 
-                ticket: v.clientes.size > 0 ? v.sellout / v.clientes.size : 0 
-            })).sort((a,b) => b.sellout - a.sellout);
-            
+            tableData = Array.from(mapCidades.values()).map(v => ({ sup: v.sup, cid: v.cid, clientes: v.clientes.size, sellout: v.sellout, ticket: v.clientes.size > 0 ? v.sellout / v.clientes.size : 0 })).sort((a,b) => b.sellout - a.sellout);
             buildTableHTML();
         }
 
@@ -2325,205 +2256,6 @@
             sortProdModalDir[key] *= -1; renderProdModalTableBody();
         }
 
-        // ================= NOVO MODAL CIDADES =================
-        let modalCidData = []; 
-        let modalCidDepts = []; 
-        let modalCidSecs = [];
-        let isModalCidSecaoMode = false;
-        let sortCidModalDir = {};
-        
-        function showCidadesModal() {
-            const filterTipoVendaEl = document.getElementById('filter-tipo-venda');
-            const tipoVenda = filterTipoVendaEl ? filterTipoVendaEl.value : 'VENDIDO';
-            const mes = document.getElementById('filter-mes').value;
-            const sups = getCustomSelectValues('filter-supervisor');
-            const vends = getCustomSelectValues('filter-vendedor');
-            const deptsFiltro = getCustomSelectValues('filter-departamento');
-            const secsFiltro = getCustomSelectValues('filter-secao'); // NOVA CAPTURA: Filtro de Seção
-
-            isModalCidSecaoMode = secsFiltro.length > 0;
-            modalCidSecs = secsFiltro;
-
-            // 1. Obter os departamentos únicos da base geral
-            let todosDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
-            
-            // Aplica o filtro de departamento nas colunas do modal se houver seleção
-            if (deptsFiltro.length > 0) {
-                modalCidDepts = todosDepts.filter(d => deptsFiltro.includes(d));
-            } else {
-                modalCidDepts = todosDepts;
-            }
-            
-            // 2. Criar a base fixa de cidades (Ignorando o filtro de MÊS)
-            // Considera apenas TIPO_VENDA, SUPERVISOR e VENDEDOR
-            const baseCidades = globalData.filter(row => {
-                return (!tipoVenda || row.TIPO_VENDA === tipoVenda) &&
-                       (sups.length === 0 || sups.includes(row.SUPERVISOR)) &&
-                       (vends.length === 0 || vends.includes(row.VENDEDOR));
-            });
-
-            const mapCidades = new Map();
-            baseCidades.forEach(row => {
-                if (!mapCidades.has(row.CIDADE)) {
-                    let initialDepts = {};
-                    modalCidDepts.forEach(d => initialDepts[d] = 0);
-                    
-                    let initialSecs = {};
-                    if (isModalCidSecaoMode) {
-                        modalCidSecs.forEach(s => initialSecs[s] = { sellout: 0, clis: new Set() });
-                    }
-
-                    mapCidades.set(row.CIDADE, { cid: row.CIDADE, sellout: 0, depts: initialDepts, secs: initialSecs });
-                }
-            });
-
-            // 3. Somar os valores reais respeitando o filtro de MÊS
-            const salesCidades = baseCidades.filter(row => !mes || row.MES_EXTRATO === mes);
-            salesCidades.forEach(row => {
-                if (mapCidades.has(row.CIDADE)) {
-                    const entry = mapCidades.get(row.CIDADE);
-                    
-                    if (isModalCidSecaoMode) {
-                        // MODO SEÇÃO: Somar apenas as seções selecionadas
-                        if (modalCidSecs.includes(row.SECAO_NORM)) {
-                            entry.sellout += row.VLFAT_NUM;
-                            entry.secs[row.SECAO_NORM].sellout += row.VLFAT_NUM;
-                            if (row.CODCLI) entry.secs[row.SECAO_NORM].clis.add(row.CODCLI);
-                        }
-                    } else {
-                        // MODO DEPARTAMENTO CLÁSSICO: Somar apenas se o departamento fizer parte da seleção
-                        if (modalCidDepts.includes(row.DEPT_NORM)) {
-                            entry.sellout += row.VLFAT_NUM;
-                            if (entry.depts[row.DEPT_NORM] !== undefined) {
-                                entry.depts[row.DEPT_NORM] += row.VLFAT_NUM;
-                            }
-                        }
-                    }
-                }
-            });
-
-            modalCidData = Array.from(mapCidades.values());
-            
-            // Calcular o status numericamente para facilitar a ordenação (2=✅, 1=⚠️, 0=❌)
-            modalCidData.forEach(c => {
-                let count = 0;
-                if (isModalCidSecaoMode) {
-                    modalCidSecs.forEach(s => { if (c.secs[s].sellout > 0) count++; });
-                    if (count === modalCidSecs.length && modalCidSecs.length > 0) c.statusVal = 2;
-                    else if (count === 0) c.statusVal = 0;
-                    else c.statusVal = 1;
-                } else {
-                    modalCidDepts.forEach(d => { if (c.depts[d] > 0) count++; });
-                    if (count === modalCidDepts.length && modalCidDepts.length > 0) c.statusVal = 2;
-                    else if (count === 0) c.statusVal = 0;
-                    else c.statusVal = 1;
-                }
-            });
-
-            sortCidModalDir = { cid: 1, sellout: -1, status: -1 };
-            if (isModalCidSecaoMode) {
-                modalCidSecs.forEach(s => { 
-                    sortCidModalDir['sec_sell_'+s] = 1; 
-                    sortCidModalDir['sec_cli_'+s] = 1; 
-                });
-            } else {
-                modalCidDepts.forEach(d => sortCidModalDir['dept_'+d] = 1);
-            }
-            
-            // Ordem inicial: maior total de sellout primeiro
-            modalCidData.sort((a, b) => b.sellout - a.sellout);
-            
-            renderModalCidadesHead(); 
-            renderModalCidadesBody();
-            new bootstrap.Modal(document.getElementById('modalCidades')).show();
-        }
-
-        function renderModalCidadesHead() { 
-            const thead = document.getElementById('modal-cidades-head'); 
-            let html = `<tr><th class="ps-4">Posição</th><th onclick="sortCidModalTable('cid')" style="cursor:pointer">Cidade <i class="fas fa-sort ms-1"></i></th>`; 
-            
-            if (isModalCidSecaoMode) {
-                modalCidSecs.forEach(s => {
-                    html += `<th class="text-end" onclick="sortCidModalTable('sec_sell_${s}')" style="cursor:pointer">${s} (R$) <i class="fas fa-sort ms-1"></i></th>`;
-                    html += `<th class="text-center" onclick="sortCidModalTable('sec_cli_${s}')" style="cursor:pointer">Posit. ${s} <i class="fas fa-sort ms-1"></i></th>`;
-                });
-            } else {
-                modalCidDepts.forEach(d => { 
-                    html += `<th class="text-end" onclick="sortCidModalTable('dept_${d}')" style="cursor:pointer">${d} (R$) <i class="fas fa-sort ms-1"></i></th>`; 
-                });
-            }
-             
-            html += `<th class="text-end pe-4" onclick="sortCidModalTable('sellout')" style="cursor:pointer">Total (R$) <i class="fas fa-sort ms-1"></i></th><th class="text-center" onclick="sortCidModalTable('status')" style="cursor:pointer">Status <i class="fas fa-sort ms-1"></i></th></tr>`; 
-            thead.innerHTML = html; 
-        }
-
-        function renderModalCidadesBody() { 
-            const tbody = document.getElementById('modal-cidades-body'); 
-            tbody.innerHTML = ''; 
-            modalCidData.forEach((c, index) => { 
-                let posBadge = `<span class="text-muted fw-bold">${index + 1}º</span>`; 
-                if (index === 0) posBadge = `<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-medal me-1"></i> 1º</span>`; 
-                else if (index === 1) posBadge = `<span class="badge bg-secondary px-2 py-1"><i class="fas fa-medal me-1"></i> 2º</span>`; 
-                else if (index === 2) posBadge = `<span class="badge px-2 py-1" style="background-color: #cd7f32;"><i class="fas fa-medal me-1"></i> 3º</span>`; 
-                
-                let trHtml = `<td class="ps-4 align-middle">${posBadge}</td><td class="fw-bold align-middle">${c.cid}</td>`; 
-                
-                if (isModalCidSecaoMode) {
-                    modalCidSecs.forEach(s => { 
-                        let valSell = c.secs[s].sellout;
-                        let valCli = c.secs[s].clis.size;
-                        
-                        let valClass = valSell === 0 ? 'text-danger fw-bold' : 'text-muted';
-                        trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(valSell)}</td>`; 
-                        
-                        let cliClass = valCli === 0 ? 'text-danger fw-bold' : 'text-muted fw-bold';
-                        trHtml += `<td class="text-center align-middle ${cliClass}">${formatNumber(valCli)}</td>`; 
-                    });
-                } else {
-                    modalCidDepts.forEach(d => { 
-                        let val = c.depts[d]; 
-                        let valClass = val === 0 ? 'text-danger fw-bold' : 'text-muted';
-                        trHtml += `<td class="text-end align-middle ${valClass}">${formatCurrency(val)}</td>`; 
-                    });
-                }
-                 
-                trHtml += `<td class="text-end fw-bold pe-4 align-middle text-primary">${formatCurrency(c.sellout)}</td>`; 
-                
-                // Status da cidade com base na variavel statusVal: ✅ = 2 / ⚠️ = 1 / ❌ = 0
-                let statusIcon = '';
-                if (c.statusVal === 2) {
-                    statusIcon = '✅';
-                } else if (c.statusVal === 0) {
-                    statusIcon = '❌';
-                } else {
-                    statusIcon = '⚠️';
-                }
-                trHtml += `<td class="text-center align-middle fs-5">${statusIcon}</td>`;
-                
-                const tr = document.createElement('tr'); 
-                tr.innerHTML = trHtml; 
-                tbody.appendChild(tr); 
-            }); 
-        }
-
-        function sortCidModalTable(key) { 
-            const dir = sortCidModalDir[key]; 
-            modalCidData.sort((a, b) => { 
-                if(key === 'cid') return dir * a.cid.localeCompare(b.cid); 
-                if(key === 'sellout') return dir * (a.sellout - b.sellout); 
-                if(key === 'status') return dir * (a.statusVal - b.statusVal); 
-                
-                if(key.startsWith('dept_')) return dir * (a.depts[key.replace('dept_', '')] - b.depts[key.replace('dept_', '')]); 
-                if(key.startsWith('sec_sell_')) return dir * (a.secs[key.replace('sec_sell_', '')].sellout - b.secs[key.replace('sec_sell_', '')].sellout); 
-                if(key.startsWith('sec_cli_')) return dir * (a.secs[key.replace('sec_cli_', '')].clis.size - b.secs[key.replace('sec_cli_', '')].clis.size); 
-                
-                return 0; 
-            }); 
-            sortCidModalDir[key] *= -1; 
-            renderModalCidadesBody(); 
-        }
-        // ================= FIM MODAL CIDADES =================
-
         function changeMetaCategory(cat) {
             currentMetaCategory = cat;
             const catName = cat === 'TT' ? 'TOTAL GERAL' : cat;
@@ -2544,74 +2276,23 @@
             const vends = getCustomSelectValues('filter-vendedor');
             const depts = getCustomSelectValues('filter-departamento');
             const cids = getCustomSelectValues('filter-cidade');
-            const secs = getCustomSelectValues('filter-secao');
 
             const dadosExclusivosMetas = globalData.filter(row => {
                 return (!tipoVenda || row.TIPO_VENDA === tipoVenda) && 
                        (sups.length === 0 || sups.includes(row.SUPERVISOR)) && 
                        (vends.length === 0 || vends.includes(row.VENDEDOR)) && 
                        (depts.length === 0 || depts.includes(row.DEPT_NORM)) && 
-                       (cids.length === 0 || cids.includes(row.CIDADE)) &&
-                       (secs.length === 0 || secs.includes(row.SECAO_NORM));
+                       (cids.length === 0 || cids.includes(row.CIDADE));
             });
 
-            let qKey;
-
-            // LIGAÇÃO DA TABELA DE METAS ISOLANDO OS BOTÕES DE DEPARTAMENTO
-            if (currentMetaCategory !== 'TT') {
-                // REGRA ORIGINAL PARA DEPARTAMENTOS: Filtra e puxa a meta ESTRITAMENTE do departamento.
-                dadosExclusivosMetas.forEach(r => { 
-                    if(r.DEPT_NORM !== currentMetaCategory) return; 
-                    if(rMes[r.MES_EXTRATO]) { 
-                        rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
-                        if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
-                    } 
-                });
-                
-                // Puxa a meta exata do departamento (como era lido da aba FINANCEIRO)
-                qKey = standardizeString(currentMetaCategory);
-                
-            } else {
-                // LÓGICA DINÂMICA DE HERANÇA (Apenas quando o botão selecionado for o TOTAL GERAL)
-                let metaCatAtiva = 'TT';
-                if (secs.length === 1) {
-                    metaCatAtiva = secs[0];
-                } else if (secs.length > 1 && secs.every(s => String(s).toUpperCase().startsWith('GSA - MAC'))) {
-                    metaCatAtiva = 'GSA - MAC';
-                } else if (secs.length > 1 && secs.every(s => String(s).toUpperCase().startsWith('GSA - REFRESKANT'))) {
-                    metaCatAtiva = 'GSA - REFRESKANT';
-                } else if (depts.length === 1) {
-                    metaCatAtiva = depts[0];
-                }
-
-                dadosExclusivosMetas.forEach(r => { 
-                    if (metaCatAtiva !== 'TT') {
-                        let isMacGroup = metaCatAtiva.startsWith('GSA - MAC') && (r.DEPT_NORM.startsWith('GSA - MAC') || r.SECAO_NORM.startsWith('GSA - MAC'));
-                        let isRefGroup = metaCatAtiva.startsWith('GSA - REFRESKANT') && (r.DEPT_NORM.startsWith('GSA - REFRESKANT') || r.SECAO_NORM.startsWith('GSA - REFRESKANT'));
-                        if (r.DEPT_NORM !== metaCatAtiva && r.SECAO_NORM !== metaCatAtiva && !isMacGroup && !isRefGroup) return; 
-                    }
-                    if(rMes[r.MES_EXTRATO]) { 
-                        rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; 
-                        if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); 
-                    } 
-                });
-                
-                qKey = getMetaKey(metaCatAtiva);
-            }
+            dadosExclusivosMetas.forEach(r => { if(currentMetaCategory!=='TT' && r.DEPT_NORM!==currentMetaCategory) return; if(rMes[r.MES_EXTRATO]) { rMes[r.MES_EXTRATO].sell += r.VLFAT_NUM; if(r.CODCLI) rMes[r.MES_EXTRATO].clis.add(r.CODCLI); } });
             
-            let lM = mesesOrdenados.map(m => nomeMeses[m]);
-            const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0);
-            const rSArr = mesesOrdenados.map(m => rMes[m].sell);
-            const mCArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].cobertura : 0);
-            const rCArr = mesesOrdenados.map(m => rMes[m].clis.size);
+            let qKey = getMetaKey(currentMetaCategory), lM = mesesOrdenados.map(m => nomeMeses[m]);
+            const mSArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].sellout : 0), rSArr = mesesOrdenados.map(m => rMes[m].sell);
+            const mCArr = mesesOrdenados.map(m => metasDinamicas[m] && metasDinamicas[m][qKey] ? metasDinamicas[m][qKey].cobertura : 0), rCArr = mesesOrdenados.map(m => rMes[m].clis.size);
             
             let uniqueDepts = [...new Set(globalData.map(d => d.DEPT_NORM))].filter(d => d !== 'OUTROS').sort();
-            let cGraf = currentMetaCategory !== 'TT' ? getDeptColor(currentMetaCategory, uniqueDepts.indexOf(currentMetaCategory)) : coresPadrao.DEFAULT;
-
-            const catNameText = currentMetaCategory === 'TT' ? 'TOTAL GERAL' : currentMetaCategory;
-            document.getElementById('title-table-metas').innerText = `Detalhamento Mensal de Metas (${catNameText})`;
-            document.getElementById('title-chart-meta-sellout').innerText = `Acompanhamento Sell Out: Meta vs Realizado (${catNameText})`;
-            document.getElementById('title-chart-meta-cob').innerText = `Acompanhamento Cobertura: Meta vs Realizado (${catNameText})`;
+            let cGraf = currentMetaCategory!=='TT' ? getDeptColor(currentMetaCategory, uniqueDepts.indexOf(currentMetaCategory)) : coresPadrao.DEFAULT;
 
             // Gráficos de Metas com LEGENDA NO TOPO
             createOrUpdateChart('chartMetaSellOut', 'bar', { labels: lM, datasets: [ { label: 'Meta (R$)', type: 'line', data: mSArr, borderColor: '#e74c3c', backgroundColor: '#e74c3c', borderWidth: 2, fill: false }, { label: 'Realizado (R$)', data: rSArr, backgroundColor: cGraf, borderRadius: 4 } ] }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } } });
@@ -2642,17 +2323,6 @@
             const downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click();
         }
 
-        function exportSupervisoresToCSV(filename) {
-            let csv = []; const rows = document.querySelectorAll("#supervisores-table tr");
-            for (let i = 0; i < rows.length; i++) {
-                let row = [], cols = rows[i].querySelectorAll("td, th");
-                for (let j = 0; j < cols.length; j++) row.push('"' + cols[j].innerText.replace(/"/g, '""') + '"');
-                csv.push(row.join(";"));
-            }
-            const csvFile = new Blob(["\uFEFF"+csv.join("\n")], {type: "text/csv;charset=utf-8;"});
-            const downloadLink = document.createElement("a"); downloadLink.download = filename; downloadLink.href = window.URL.createObjectURL(csvFile); downloadLink.style.display = "none"; document.body.appendChild(downloadLink); downloadLink.click();
-        }
-
         function exportModalToPDF(event, type) {
             const btn = event.currentTarget;
             const originalHTML = btn.innerHTML;
@@ -2664,11 +2334,7 @@
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('landscape'); 
 
-                    let titleText = '';
-                    if (type === 'vendedores') titleText = 'Ranking Completo de Vendedores';
-                    else if (type === 'produtos') titleText = 'Detalhamento de Produtos Vendidos';
-                    else if (type === 'cidades') titleText = 'Ranking Completo de Cidades';
-                    
+                    const titleText = type === 'vendedores' ? 'Ranking Completo de Vendedores' : 'Detalhamento de Produtos Vendidos';
                     const dataAtual = new Date().toLocaleString('pt-PT');
 
                     doc.setFontSize(16);
@@ -2677,27 +2343,7 @@
 
                     doc.setFontSize(12);
                     doc.setTextColor(75, 101, 132);
-                    doc.text(titleText, 14, 26);
-
-                    // CAPTURA DOS FILTROS APLICADOS PARA O CABEÇALHO DO PDF
-                    const fTipo = document.getElementById('filter-tipo-venda') ? document.getElementById('filter-tipo-venda').value : 'VENDIDO';
-                    const fMes = document.getElementById('filter-mes') ? document.getElementById('filter-mes').value : '';
-                    const fMesStr = fMes ? `${nomeMesesCompleto[fMes]} / 2026` : 'Todos (Acumulado)';
-                    const fSups = getCustomSelectValues('filter-supervisor');
-                    const fVends = getCustomSelectValues('filter-vendedor');
-                    const fDepts = getCustomSelectValues('filter-departamento');
-                    const fSecs = getCustomSelectValues('filter-secao');
-                    
-                    let strFiltros = `Filtros: Tipo (${fTipo}) | Mês (${fMesStr})`;
-                    if(fSups.length > 0) strFiltros += ` | Sup (${fSups.join(', ')})`;
-                    if(fVends.length > 0) strFiltros += ` | Vend (${fVends.join(', ')})`;
-                    if(fDepts.length > 0) strFiltros += ` | Dept (${fDepts.join(', ')})`;
-                    if(fSecs.length > 0) strFiltros += ` | Seç (${fSecs.join(', ')})`;
-                    if(strFiltros.length > 140) strFiltros = strFiltros.substring(0, 137) + '...';
-
-                    doc.setFontSize(9);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(strFiltros, 14, 31.5);
+                    doc.text(titleText, 14, 27);
 
                     doc.setFontSize(10);
                     doc.setTextColor(100, 100, 100);
@@ -2708,14 +2354,12 @@
 
                     doc.setDrawColor(15, 76, 129);
                     doc.setLineWidth(0.5);
-                    doc.line(14, 34, doc.internal.pageSize.width - 14, 34);
+                    doc.line(14, 32, doc.internal.pageSize.width - 14, 32);
 
                     let head = [];
                     let body = [];
 
                     const cleanStr = (str) => String(str).replace(/\u00A0/g, ' ');
-                    // Remove R$ no PDF para dar muito mais espaço ao texto e evitar quebras de linha
-                    const cleanCurrencyForPDF = (val) => cleanStr(formatCurrency(val)).replace(/R\$\s?/ig, '').trim();
 
                     if (type === 'vendedores') {
                         head = [['Posição', 'Vendedor', 'Clientes Posit.', ...modalVendDepts.map(d => d + ' (R$)'), 'Total (R$)']];
@@ -2723,10 +2367,10 @@
                             `${index + 1}º`,
                             v.vend,
                             formatNumber(v.clientes),
-                            ...modalVendDepts.map(d => cleanCurrencyForPDF(v.depts[d])),
-                            cleanCurrencyForPDF(v.sellout)
+                            ...modalVendDepts.map(d => cleanStr(formatCurrency(v.depts[d]))),
+                            cleanStr(formatCurrency(v.sellout))
                         ]);
-                    } else if (type === 'produtos') {
+                    } else {
                         head = [['Posição', 'Produto / SKU', 'Departamento', 'Clientes Posit.', 'Qtd Vendida', 'Sell Out (R$)']];
                         body = modalProdData.map((p, index) => [
                             `${index + 1}º`,
@@ -2734,53 +2378,14 @@
                             p.dept,
                             formatNumber(p.clientes),
                             formatNumber(p.qtd),
-                            cleanCurrencyForPDF(p.sellout)
+                            cleanStr(formatCurrency(p.sellout))
                         ]);
-                    } else if (type === 'cidades') {
-                        if (isModalCidSecaoMode) {
-                            let headRow = ['Posição', 'Cidade'];
-                            modalCidSecs.forEach(s => { headRow.push(`${s} (R$)`); headRow.push(`Posit. ${s}`); });
-                            headRow.push('Total (R$)');
-                            headRow.push('Status');
-                            head = [headRow];
-
-                            body = modalCidData.map((c, index) => {
-                                let statusStr = '';
-                                if (c.statusVal === 2) statusStr = 'OK';
-                                else if (c.statusVal === 0) statusStr = 'Zerado';
-                                else statusStr = 'Alerta';
-                                
-                                let rowData = [`${index + 1}º`, c.cid];
-                                modalCidSecs.forEach(s => {
-                                    rowData.push(cleanCurrencyForPDF(c.secs[s].sellout));
-                                    rowData.push(formatNumber(c.secs[s].clis.size));
-                                });
-                                rowData.push(cleanCurrencyForPDF(c.sellout));
-                                rowData.push(statusStr);
-                                return rowData;
-                            });
-                        } else {
-                            head = [['Posição', 'Cidade', ...modalCidDepts.map(d => d + ' (R$)'), 'Total (R$)', 'Status']];
-                            body = modalCidData.map((c, index) => {
-                                let statusStr = '';
-                                if (c.statusVal === 2) statusStr = 'OK';
-                                else if (c.statusVal === 0) statusStr = 'Zerado';
-                                else statusStr = 'Alerta';
-                                return [
-                                    `${index + 1}º`,
-                                    c.cid,
-                                    ...modalCidDepts.map(d => cleanCurrencyForPDF(c.depts[d])),
-                                    cleanCurrencyForPDF(c.sellout),
-                                    statusStr
-                                ];
-                            });
-                        }
                     }
 
                     doc.autoTable({
-                        startY: 39, head: head, body: body, theme: 'striped',
+                        startY: 38, head: head, body: body, theme: 'striped',
                         headStyles: { fillColor: [15, 76, 129], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
-                        styles: { fontSize: 7.5, cellPadding: 2.5, textColor: [45, 52, 54] },
+                        styles: { fontSize: 9, cellPadding: 4, textColor: [45, 52, 54] },
                         alternateRowStyles: { fillColor: [245, 247, 250] },
                         didParseCell: function(data) {
                             if (data.section === 'body') {
@@ -2788,34 +2393,9 @@
                                 if (type === 'vendedores') {
                                     if (data.column.index === 2) data.cell.styles.halign = 'center'; 
                                     if (data.column.index > 2) data.cell.styles.halign = 'right'; 
-                                } else if (type === 'produtos') { 
+                                } else { 
                                     if (data.column.index === 2) data.cell.styles.halign = 'center'; 
                                     if ([3, 4, 5].includes(data.column.index)) data.cell.styles.halign = 'right'; 
-                                } else if (type === 'cidades') {
-                                    if (data.column.index > 1 && data.column.index < head[0].length - 1) data.cell.styles.halign = 'right';
-                                    if (data.column.index === head[0].length - 1) data.cell.styles.halign = 'center';
-                                    
-                                    // Cor vermelha para valores zerados nos departamentos
-                                    if (data.column.index > 1 && data.column.index < head[0].length - 2) {
-                                        if (data.cell.raw === '0,00' || data.cell.raw === '0') {
-                                            data.cell.styles.textColor = [220, 53, 69]; // Vermelho
-                                            data.cell.styles.fontStyle = 'bold';
-                                        }
-                                    }
-                                    
-                                    // Cores dinâmicas para a coluna Status
-                                    if (data.column.index === head[0].length - 1) {
-                                        if (data.cell.raw === 'OK') {
-                                            data.cell.styles.textColor = [40, 167, 69]; // Verde
-                                            data.cell.styles.fontStyle = 'bold';
-                                        } else if (data.cell.raw === 'Alerta') {
-                                            data.cell.styles.textColor = [204, 153, 0]; // Amarelo Escuro
-                                            data.cell.styles.fontStyle = 'bold';
-                                        } else if (data.cell.raw === 'Zerado') {
-                                            data.cell.styles.textColor = [220, 53, 69]; // Vermelho
-                                            data.cell.styles.fontStyle = 'bold';
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -2936,29 +2516,6 @@
             }
 
             window.comparativoData = data;
-            
-            // Sincronizar as metas da Planilha de Categorias com as Metas Dinâmicas (KPIs)
-            const monthMapComp = { 'JANEIRO':'01', 'FEVEREIRO':'02', 'MARÇO':'03', 'MARCO':'03', 'ABRIL':'04', 'MAIO':'05', 'JUNHO':'06', 'JULHO':'07', 'AGOSTO':'08', 'SETEMBRO':'09', 'OUTUBRO':'10', 'NOVEMBRO':'11', 'DEZEMBRO':'12' };
-
-            ['Financeiro', 'Cobertura'].forEach(sec => {
-                for (let cat in data[sec]) {
-                    // REGRA CRUCIAL: Ignorar o TOTAL GERAL vindo da aba de Categorias.
-                    // Isso evita que a meta duplique nos KPIs, pois o total já é puxado da aba FINANCEIRO original.
-                    if (cat === 'TOTAL GERAL') continue;
-
-                    let internalKey = standardizeString(cat);
-                    data[sec][cat].forEach(d => {
-                        let m = monthMapComp[d.mes];
-                        if (m) {
-                            if (!metasDinamicas[m]) metasDinamicas[m] = {};
-                            if (!metasDinamicas[m][internalKey]) metasDinamicas[m][internalKey] = { sellout: 0, cobertura: 0 };
-                            
-                            if (sec === 'Financeiro') metasDinamicas[m][internalKey].sellout = d.m2026;
-                            if (sec === 'Cobertura') metasDinamicas[m][internalKey].cobertura = d.m2026;
-                        }
-                    });
-                }
-            });
             
             const selectCat = document.getElementById('comp-departamento-select');
             selectCat.innerHTML = '';
