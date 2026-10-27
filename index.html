@@ -846,45 +846,7 @@
                         </button>
                     </div>
                     <pre class="bg-light p-2 rounded border small text-dark" style="max-height: 180px; overflow-y: auto; font-size: 0.75rem;" id="code-optimized-script">function doGet(e) {
-  var folderId = '1x8o8qLJnr-1WBFBNJQ6J3zzuhZVoqNUI';
-  var folder = DriveApp.getFolderById(folderId);
-  var files = folder.getFiles();
-  var fileContents = [];
-
-  while (files.hasNext()) {
-    var file = files.next();
-    var name = file.getName();
-    var upper = name.toUpperCase();
-    
-    // Ignora arquivos temporários (~$...) ou maiores que 15MB para não estourar RAM
-    if (name.indexOf('~$') === 0 || file.getSize() > 15 * 1024 * 1024) continue;
-    
-    var isExcel = upper.endsWith('.XLSX') || upper.endsWith('.XLS');
-    var isCsv = upper.endsWith('.CSV');
-    var isRelevant = upper.indexOf('VENDID') > -1 || upper.indexOf('FATURAD') > -1 || 
-                     upper.indexOf('META') > -1 || upper.indexOf('CATEGORIA') > -1 ||
-                     upper.indexOf('FINANC') > -1 || upper.indexOf('POSITIV') > -1 || upper.indexOf('COBERTUR') > -1;
-
-    if (!isExcel && !isCsv) continue;
-    if (!isRelevant) continue;
-
-    if (isCsv) {
-      fileContents.push({
-        name: name,
-        type: 'csv',
-        content: file.getBlob().getDataAsString("ISO-8859-1")
-      });
-    } else if (isExcel) {
-      fileContents.push({
-        name: name,
-        type: 'excel',
-        content: Utilities.base64Encode(file.getBlob().getBytes())
-      });
-    }
-  }
-
-  return ContentService.createTextOutput(JSON.stringify(fileContents))
-    .setMimeType(ContentService.MimeType.JSON);
+  
 }</pre>
                 </div>
                 <div class="modal-footer border-0 d-flex justify-content-between">
